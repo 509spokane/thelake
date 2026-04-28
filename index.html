@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Lake</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a1628;
+      color: #e8f4fd;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .water-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(180deg, #0a1628 0%, #0d2444 40%, #0e3060 70%, #1a4a7a 100%);
+    }
+
+    .wave {
+      position: fixed;
+      bottom: 0;
+      left: -100%;
+      width: 300%;
+      height: 180px;
+      animation: wave linear infinite;
+    }
+    .wave svg { width: 100%; height: 100%; }
+    .wave:nth-child(1) { animation-duration: 14s; animation-delay: 0s;   opacity: 0.10; }
+    .wave:nth-child(2) { animation-duration: 20s; animation-delay: -5s;  opacity: 0.06; bottom: 10px; }
+    .wave:nth-child(3) { animation-duration: 26s; animation-delay: -10s; opacity: 0.04; bottom: 25px; }
+
+    @keyframes wave { 0% { transform: translateX(0); } 100% { transform: translateX(33.33%); } }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 44px 20px 80px;
+    }
+
+    header { text-align: center; margin-bottom: 32px; }
+
+    .lake-name {
+      font-size: 12px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #7ec8e3;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 56px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: #fff;
+      line-height: 1;
+    }
+    h1 span { color: #4db8e8; }
+
+    .subtitle { margin-top: 8px; font-size: 13px; color: #6a9ab8; letter-spacing: 0.05em; }
+
+    /* Status */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #5a8aaa;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4db8e8; }
+    .status-dot.loading { background: #f0c040; animation: pulse 1s ease-in-out infinite; }
+    .status-dot.error   { background: #e05a5a; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Compact elevation card */
+    .elev-compact {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(77,184,232,0.15);
+      border-radius: 14px;
+      backdrop-filter: blur(6px);
+      flex-wrap: wrap;
+    }
+    .elev-compact-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #4a8aaa;
+    }
+    .elev-compact-value {
+      font-size: 32px;
+      font-weight: 300;
+      color: #e8f4fd;
+      line-height: 1;
+    }
+    .elev-compact-value em { font-style: normal; font-size: 14px; color: #4db8e8; margin-left: 3px; }
+    .elev-compact-meta { font-size: 11px; color: #4a7a96; }
+
+    /* Shared card shell */
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(77,184,232,0.12);
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(6px);
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #5a9ec0;
+      margin-bottom: 18px;
+    }
+
+    /* ── Combined daily forecast — row-based ── */
+    .combined-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 6px;
+    }
+
+    /* grid columns set dynamically in JS */
+    .combined-grid {
+      display: grid;
+      gap: 2px 4px;
+      min-width: max-content;
+      align-items: center;
+    }
+
+    .row-label {
+      font-size: 9px;
+      color: #3a6a86;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: right;
+      padding-right: 8px;
+      white-space: nowrap;
+    }
+
+    .fc { /* forecast cell */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 2px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .fc.is-today { background: rgba(77,184,232,0.08); }
+
+    .fc-date { font-size: 11px; color: #5a9ec0; font-weight: 500; flex-direction: column; gap: 1px; }
+    .fc-date.is-today { color: #7eddf5; }
+
+    .fc-icon img { width: 40px; height: 40px; object-fit: contain; opacity: 0.92; }
+
+    .fc-desc { font-size: 9px; color: #6a9ab8; line-height: 1.3; }
+
+    .fc-high { font-size: 14px; font-weight: 600; color: #f0c878; }
+    .fc-low  { font-size: 12px; color: #7ec8e3; }
+
+    .fc-wind { font-size: 9px; color: #3a6a86; line-height: 1.4; }
+
+    .fc-level {
+      flex-direction: column;
+      gap: 3px;
+      align-items: center;
+      justify-content: flex-end;
+      height: 54px;
+      padding-bottom: 0;
+    }
+
+    .day-bar {
+      width: 16px;
+      border-radius: 3px 3px 0 0;
+      background: linear-gradient(180deg, #4db8e8 0%, #1a5e8a 100%);
+    }
+    .day-bar.is-today {
+      background: linear-gradient(180deg, #7eddf5 0%, #2a8abf 100%);
+      box-shadow: 0 0 8px rgba(77,184,232,0.45);
+    }
+    .fc-elev { font-size: 10px; color: #7aaac4; }
+    .day-bar.is-high { background: linear-gradient(180deg, #f0c878 0%, #b07820 100%); box-shadow: 0 0 8px rgba(240,180,80,0.4); }
+    .day-bar.is-low  { background: linear-gradient(180deg, #50d8a8 0%, #1a7858 100%); box-shadow: 0 0 8px rgba(80,200,160,0.4); }
+    .fc-elev.is-high { color: #f0c878; font-weight: 600; }
+    .fc-elev.is-low  { color: #50d8a8; font-weight: 600; }
+
+    .wind-now.top-wind .wind-speed-val { color: #f0a050; }
+    .wind-hour.top-wind .wind-speed-val { color: #f0a050; font-weight: 600; }
+    .day-elev { font-size: 10px; color: #7aaac4; margin-top: 2px; }
+
+    /* ── Hourly wind ── */
+    .wind-scroll { width: 100%; }
+    .wind-chart { width: 100%; display: block; }
+    /* Themed scrollbars for wind chart and 10-day grid */
+    #windChart::-webkit-scrollbar,
+    #waterLevelGrid::-webkit-scrollbar,
+    #summaryBar::-webkit-scrollbar { height: 4px; }
+    #windChart::-webkit-scrollbar-track,
+    #waterLevelGrid::-webkit-scrollbar-track,
+    #summaryBar::-webkit-scrollbar-track { background: rgba(10,22,40,0.6); border-radius: 2px; }
+    #windChart::-webkit-scrollbar-thumb,
+    #waterLevelGrid::-webkit-scrollbar-thumb,
+    #summaryBar::-webkit-scrollbar-thumb { background: rgba(77,184,232,0.35); border-radius: 2px; }
+    #windChart::-webkit-scrollbar-thumb:hover,
+    #waterLevelGrid::-webkit-scrollbar-thumb:hover { background: rgba(77,184,232,0.6); }
+
+    .wind-hour {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      width: 42px;
+    }
+    .wind-speed-val { font-size: 10px; color: #a0cce8; font-weight: 500; }
+    .wind-gust-val  { font-size: 9px; color: rgba(240,180,80,0.6); }
+    .wind-dir  { font-size: 9px; color: #4db8e8; }
+    .wind-time { font-size: 9px; color: #4db8e8; }
+    .wind-now .wind-speed-val { color: #7eddf5; }
+    .wind-now .wind-time      { color: #7eddf5; }
+
+    /* ── Water Level Column Visualization ── */
+    .wl-col {
+      width: 78px; min-width: 78px; border-radius: 8px; overflow: hidden;
+      background: rgba(18,55,110,0.65);
+      border: 1px solid rgba(77,184,232,0.20);
+      display: flex; flex-direction: column; position: relative; flex-shrink: 0;
+    }
+    .wl-corner-icon {
+      position: absolute; top: -8px; left: -8px;
+      font-size: 52px; line-height: 1; z-index: 1;
+      pointer-events: none; opacity: 0.85;
+    }
+    .wl-rows {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 4px 0; position: relative; z-index: 2;
+    }
+    .wl-r { display: flex; align-items: center; justify-content: center; width: 100%; }
+    .wl-r-day  { padding: 0 0 3px; }
+    .wl-r-date { padding: 0 0 14px; }
+    .wl-r-high { padding: 0 0 20px; }
+    .wl-r-low  { padding: 0 0 10px; }
+    .wl-r-wind { padding: 0 0 10px; }
+    .wl-r-rain { padding: 0; }
+    .wl-day  { font-size: 13px; font-weight: 800; color: #ffffff; }
+    .wl-date { font-size: 8px; color: #5a9ec0; }
+    .wl-high { font-size: 15px; font-weight: 600; color: #f0c878; }
+    .wl-low  { font-size: 12px; color: #7ec8e3; }
+    .wl-wind { font-size: 10px; color: #a0cce8; }
+    .wl-rain { font-size: 10px; color: #7ec8e3; }
+    .wl-water-zone { position: relative; height: 80px; flex-shrink: 0; overflow: hidden; }
+    .wl-fill { position: absolute; bottom: 0; left: 0; right: 0; background: #2F74A4; }
+    .wl-badge {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      z-index: 4; background: rgba(8,18,40,0.88);
+      border: 1px solid rgba(77,184,232,0.5); border-radius: 3px;
+      padding: 1px 5px; font-size: 8px; font-weight: 700; color: #e8f4fd;
+      white-space: nowrap;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 500px) {
+      .container { padding: 28px 12px 60px; }
+      header { margin-bottom: 20px; }
+      .lake-name { font-size: 10px; letter-spacing: 0.18em; }
+      .subtitle { font-size: 12px; }
+      .elev-compact { padding: 10px 14px; gap: 10px; }
+      .elev-compact-value { font-size: 26px; }
+      .card { padding: 18px 12px; border-radius: 16px; margin-bottom: 14px; }
+      .section-label { margin-bottom: 12px; }
+    }
+
+    /* Sticky label column when grid scrolls */
+    .row-label {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #0e2040; /* matches card interior */
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #3a6a88;
+      text-align: center;
+      line-height: 1.7;
+    }
+    a.source-link { color: #4db8e8; text-decoration: none; opacity: 0.7; }
+    a.source-link:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="water-bg">
+  <div class="wave"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,60 C150,100 350,0 600,60 C850,120 1050,20 1200,60 L1200,120 L0,120 Z" fill="white"/></svg></div>
+  <div class="wave"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,40 C200,80 400,10 600,50 C800,90 1000,20 1200,55 L1200,120 L0,120 Z" fill="white"/></svg></div>
+  <div class="wave"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,70 C100,30 300,90 600,50 C900,10 1100,80 1200,45 L1200,120 L0,120 Z" fill="white"/></svg></div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="lake-name">Lake Roosevelt · Grand Coulee Dam</div>
+    <h1>The <span>Lake</span></h1>
+    <div class="subtitle">Columbia River · Washington State</div>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span id="statusText">Fetching data…</span>
+  </div>
+
+  <div id="summaryBar" style="margin-bottom:14px;padding:14px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(77,184,232,0.12);border-radius:14px;font-size:13px;line-height:1.8;color:#7ec8e3;display:none;overflow:hidden"></div>
+
+  <div class="elev-compact" style="display:none">
+    <div class="elev-compact-label">Current Elevation</div>
+    <div class="elev-compact-value" id="elevValue">—<em>ft</em></div>
+    <div class="elev-compact-meta" id="elevMeta">above sea level</div>
+  </div>
+
+  <div class="card" id="waterLevelSection">
+    <div class="section-label">10-Day Forecast &amp; Water Level Visualization</div>
+    <div class="combined-scroll">
+      <div id="waterLevelGrid" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">
+        <div style="color:#4a7a96;font-size:13px;padding:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="windSection">
+    <div style="margin-bottom:18px">
+      <div class="section-label" style="margin-bottom:0">Wind · Next 48 Hours</div>
+    </div>
+    <div class="wind-scroll">
+      <div class="wind-chart" id="windChart">
+        <div style="color:#4a7a96;font-size:13px;padding:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="wuSection" style="display:none">
+    <div class="section-label" style="margin-bottom:16px">Current Conditions · Two Rivers Marina</div>
+    <div id="wuContent" style="color:#4a7a96;font-size:13px">Loading…</div>
+    <div style="margin-top:12px;font-size:10px;color:#3a6a82;text-align:right">
+      Source: <a class="source-link" href="https://www.wunderground.com/dashboard/pws/KWADAVEN5" target="_blank">Weather Underground · KWADAVEN5</a>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    Water level predictions subject to change without notice.<br>
+    Sources: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank">usbr.gov · Bureau of Reclamation</a>
+    &nbsp;·&nbsp;
+    <a class="source-link" href="https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046" target="_blank">weather.gov · NWS</a>
+    &nbsp;·&nbsp;
+    <span id="fetchedAt"></span>
+    <br><br>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
+        <input type="checkbox" id="showHistoricWaterLevels" style="cursor:pointer;width:16px;height:16px" checked>
+        <span>Show historic water levels</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
+        <input type="checkbox" id="showWuSection" style="cursor:pointer;width:16px;height:16px">
+        <span>Show current conditions (Two Rivers Marina)</span>
+      </label>
+      <div style="font-size:11px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.08em">Weather data source</div>
+      <div style="display:flex;gap:20px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+          <input type="radio" name="weatherSource" value="weatherapi" id="srcWeatherAPI" checked style="cursor:pointer">
+          <span>WeatherAPI</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+          <input type="radio" name="weatherSource" value="nws" id="srcNWS" style="cursor:pointer">
+          <span>NWS (weather.gov)</span>
+        </label>
+      </div>
+      <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Data source toggle ─────────────────────────────────────
+  let _forecastSource = 'weatherapi'; // 'nws', 'openmeteo', 'weatherapi', 'openweather'
+  let _weatherAPIData = null;
+  let _openWeatherData = null;
+  let _showHistoricWaterLevels = true;
+  let _weatherAPIHourlyData = null;
+  let _nwsHourlyData = null;
+
+  // API Keys — add your own from weatherapi.com and openweathermap.org
+  const WEATHERAPI_KEY = '26df06835776479798240519262704';
+  const OPENWEATHER_KEY = 'YOUR_OPENWEATHER_KEY_HERE';
+  const WUNDERGROUND_KEY = '442d6039082a4860ad6039082a1860c0';
+  const WUNDERGROUND_STATION = 'KWADAVEN5';
+
+  // WeatherAPI only — no source switching
+  // document.addEventListener('DOMContentLoaded', ...) — not needed
+
+  // Historic water levels toggle
+  document.getElementById('showHistoricWaterLevels').addEventListener('change', (e) => {
+    _showHistoricWaterLevels = e.target.checked;
+    mergeAndRenderWaterLevelBg();
+  });
+
+  // Current conditions (WU) toggle
+  document.getElementById('showWuSection').addEventListener('change', (e) => {
+    const section = document.getElementById('wuSection');
+    if (e.target.checked) {
+      section.style.display = 'block';
+      fetchWunderground();
+    } else {
+      section.style.display = 'none';
+    }
+  });
+
+  function showSourceUnavailable(msg) {
+    const grid = document.getElementById('waterLevelGrid');
+    grid.innerHTML = `<div style="color:#e07a7a;font-size:13px;padding:24px;text-align:center;width:100%">${msg}</div>`;
+    const cg = document.getElementById('combinedGrid');
+    if (cg) cg.innerHTML = '';
+  }
+
+  function handleSourceChange() {
+    if (_forecastSource === 'nws') {
+      if (_wxDayMap && Object.keys(_wxDayMap).length) {
+        mergeAndRenderWaterLevelBg();
+      } else {
+        showSourceUnavailable('NWS data unavailable (CORS proxy fetch failed). Try Open-Meteo.');
+      }
+    } else if (_forecastSource === 'openmeteo') {
+      if (_omData) {
+        renderOpenMeteoForecastWaterLevelBg(_omData);
+      } else {
+        showSourceUnavailable('Open-Meteo data not yet loaded — refresh the page.');
+      }
+    } else if (_forecastSource === 'weatherapi') {
+      if (_weatherAPIData) {
+        renderWeatherAPIForecastWaterLevelBg(_weatherAPIData);
+      } else {
+        showSourceUnavailable('WeatherAPI requires a free API key from weatherapi.com. Add it to WEATHERAPI_KEY in the source.');
+      }
+    } else if (_forecastSource === 'openweather') {
+      if (_openWeatherData) {
+        renderOpenWeatherForecastWaterLevelBg(_openWeatherData);
+      } else {
+        showSourceUnavailable('OpenWeather requires a free API key from openweathermap.org. Add it to OPENWEATHER_KEY in the source.');
+      }
+    }
+  }
+
+  // ── Shared ────────────────────────────────────────────────
+  const PROXIES = [
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
+
+  async function proxyFetch(sourceUrl) {
+    for (const make of PROXIES) {
+      try {
+        const res = await fetch(make(sourceUrl));
+        if (!res.ok) continue;
+        const ct = res.headers.get('content-type') || '';
+        let html = ct.includes('json') ? ((await res.json()).contents || '') : await res.text();
+        if (html && html.length > 500) return html;
+      } catch (e) { /* next */ }
+    }
+    return null;
+  }
+
+  // ── Shared state for merge ─────────────────────────────────
+  let _lakeDays = null;   // { dates[], elevs[] }
+  let _wxDayMap = null;   // { "4/25": { icon, desc, high, low, wind, gust } }
+  let _omData = null;     // Open-Meteo daily data
+
+  function mergeAndRender() {
+    if (!_lakeDays || !_wxDayMap) return;
+
+    const { dates, elevs } = _lakeDays;
+    const grid = document.getElementById('combinedGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `38px repeat(${dates.length}, 66px)`;
+
+    const today = new Date();
+    const todayStr = `${today.getMonth() + 1}/${today.getDate()}`;
+
+    function addLabel(text) {
+      const el = document.createElement('div');
+      el.className = 'row-label';
+      el.textContent = text;
+      grid.appendChild(el);
+    }
+
+    function addCell(html, cls) {
+      const el = document.createElement('div');
+      el.className = 'fc ' + cls;
+      el.innerHTML = html;
+      grid.appendChild(el);
+    }
+
+    const todayClass = i => dates[i] === todayStr ? ' is-today' : '';
+    const dayNames = dates.map(d => {
+      const [m, day] = d.split('/');
+      const date = new Date(`${today.getFullYear()}-${m}-${day}`);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    // Row: date with day name
+    addLabel('');
+    dates.forEach((d, i) => addCell(`<div style="line-height:1">${d}</div><div style="font-size:8px;color:#5a9ec0;margin-top:3px;line-height:1">${dayNames[i]}</div>`, `fc-date${todayClass(i)}`));
+
+    // Row: high
+    addLabel('high');
+    dates.forEach((d, i) => {
+      const wx = _wxDayMap[d] || {};
+      addCell(wx.high || '', `fc-high${todayClass(i)}`);
+    });
+
+    // Row: low
+    addLabel('low');
+    dates.forEach((d, i) => {
+      const wx = _wxDayMap[d] || {};
+      addCell(wx.low || '', `fc-low${todayClass(i)}`);
+    });
+
+    // Row: wind
+    addLabel('wind');
+    dates.forEach((d, i) => {
+      const wx = _wxDayMap[d] || {};
+      addCell(wx.wind || '', `fc-wind${todayClass(i)}`);
+    });
+
+    // Row: rain (just wind gust as placeholder for NWS)
+    addLabel('rain');
+    dates.forEach((d, i) => {
+      const wx = _wxDayMap[d] || {};
+      const gust = wx.gust ? wx.gust.replace(/[^\d]/g, '') : '—';
+      addCell(`<span style="color:#7ec8e3;font-size:11px">${gust}</span>`, `fc-wind${todayClass(i)}`);
+    });
+
+    // Row: lake level
+    addLabel('level');
+    const HALF_SPAN = 5, center = elevs.reduce((a, b) => a + b, 0) / elevs.length;
+    const SCALE_MIN = center - HALF_SPAN, range = HALF_SPAN * 2;
+    dates.forEach((d, i) => {
+      const levelVal = elevs[i];
+      const h = Math.round(((levelVal - SCALE_MIN) / range) * 41 + 3);
+      const isHigh = elevs.indexOf(Math.max(...elevs)) === i;
+      const isLow = elevs.indexOf(Math.min(...elevs)) === i;
+      const barCls = isHigh ? ' is-high' : isLow ? ' is-low' : '';
+      const elevCls = `fc-elev${isHigh ? ' is-high' : isLow ? ' is-low' : ''}`;
+      addCell(
+        `<div class="day-bar${barCls}" style="width:16px;height:${h}px"></div><div class="${elevCls}">${levelVal.toFixed(1)}</div>`,
+        `fc-level${todayClass(i)}`
+      );
+    });
+  }
+
+  // ── Lake level ────────────────────────────────────────────
+  const LAKE_SOURCE = 'https://www.usbr.gov/pn/grandcoulee/lakelevel/';
+
+  async function fetchLakeData() {
+    const html = await proxyFetch(LAKE_SOURCE);
+    if (!html) {
+      document.getElementById('statusDot').className = 'status-dot error';
+      document.getElementById('statusText').textContent = 'Could not load lake data';
+      return;
+    }
+    parseLakePage(html);
+  }
+
+  function parseLakePage(html) {
+    const plain = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+
+    const elevMatch = plain.match(/elevation of Lake Roosevelt was ([\d.]+) feet above sea level at midnight on ([A-Za-z]+ \d+, \d{4})/i);
+    if (elevMatch) {
+      document.getElementById('elevValue').innerHTML = `${elevMatch[1]}<em>ft</em>`;
+      document.getElementById('elevMeta').textContent = `above sea level · midnight ${elevMatch[2]}`;
+    }
+
+    const allDates = [...plain.matchAll(/\b(\d{1,2}\/\d{1,2})\b/g)].map(m => m[1]);
+    const allElevs = [...plain.matchAll(/\b(12[4-9]\d\.\d)\b/g)].map(m => parseFloat(m[1]));
+    const dates    = extractForecastDates(allDates);
+    const elevs    = allElevs.slice(0, dates.length);
+
+    _lakeDays = { dates, elevs };
+
+    document.getElementById('statusDot').className = 'status-dot';
+    document.getElementById('statusText').textContent = 'Live data · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('fetchedAt').textContent = 'Updated ' + new Date().toLocaleString();
+
+    mergeAndRender();
+    // Re-render the water level background grid now that lake data is available
+    if (_weatherAPIData && _forecastSource === 'weatherapi') {
+      renderWeatherAPIForecastWaterLevelBg(_weatherAPIData);
+    } else {
+      mergeAndRenderWaterLevelBg();
+    }
+    renderSummary(); // re-render summary now that lake levels are available
+  }
+
+  function extractForecastDates(all) {
+    for (let i = 0; i <= all.length - 10; i++) {
+      const run = all.slice(i, i + 10);
+      if (isConsecutiveDates(run)) return run;
+    }
+    const seen = new Set(), unique = [];
+    for (const d of all) {
+      if (!seen.has(d)) { seen.add(d); unique.push(d); }
+      if (unique.length === 10) break;
+    }
+    return unique;
+  }
+
+  function isConsecutiveDates(dates) {
+    const yr = new Date().getFullYear();
+    for (let i = 1; i < dates.length; i++) {
+      const diff = (new Date(`${dates[i]}/${yr}`) - new Date(`${dates[i-1]}/${yr}`)) / 86400000;
+      if (diff !== 1 && diff !== -364 && diff !== -365) return false;
+    }
+    return true;
+  }
+
+  // ── NWS Weather ───────────────────────────────────────────
+  const WX_SOURCE = 'https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046';
+  const WX_BASE   = 'https://forecast.weather.gov/';
+
+  async function fetchWeather() {
+    const html = await proxyFetch(WX_SOURCE);
+    if (!html) return;
+    parseWeather(html);
+  }
+
+  function parseWeather(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    const detailMap = {};
+    doc.querySelectorAll('#detailed-forecast-body .row-forecast').forEach(row => {
+      const label = row.querySelector('.forecast-label');
+      const text  = row.querySelector('.forecast-text');
+      if (label && text) detailMap[label.textContent.trim()] = text.textContent.trim();
+    });
+
+    const periods = [];
+    doc.querySelectorAll('.tombstone-container').forEach(t => {
+      const nameEl = t.querySelector('.period-name');
+      const descEl = t.querySelector('.short-desc');
+      const tempEl = t.querySelector('.temp');
+      const imgEl  = t.querySelector('img');
+
+      const name = nameEl ? nameEl.innerText.replace(/\n/g, ' ').trim() : '';
+      if (descEl) descEl.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+      const desc    = descEl ? descEl.textContent.replace(/\s+/g, ' ').trim() : '';
+      const tempTxt = tempEl ? tempEl.textContent.replace(/^(High:|Low:)\s*/i, '').trim() : '';
+      const isLow   = tempEl && tempEl.classList.contains('temp-low');
+      const iconRaw = imgEl ? (imgEl.getAttribute('src') || '') : '';
+      const iconUrl = iconRaw.startsWith('http') ? iconRaw : WX_BASE + iconRaw.replace(/^\//, '');
+
+      const detail = detailMap[name] || '';
+      const wm = detail.match(/(?:winds?)\s+([^.]+?\d+\s*(?:to\s*\d+)?\s*mph[^.]*)/i);
+      let wind = wm ? wm[1].trim()
+        .replace(/\b(north|south)(east|west)\b/gi, (_, a, b) => a[0].toUpperCase() + b[0].toUpperCase())
+        .replace(/\bnorth\b/gi,'N').replace(/\bsouth\b/gi,'S').replace(/\beast\b/gi,'E').replace(/\bwest\b/gi,'W')
+        .replace(/\bwind\b/gi,'').replace(/\s+/g,' ').trim()
+        : '';
+      const gm   = detail.match(/gusts?\s+(?:as high as\s+)?(\d+)\s*mph/i);
+      const gust = gm ? `gusts ${gm[1]} mph` : '';
+
+      periods.push({ name, desc, tempTxt, isLow, iconUrl, wind, gust });
+    });
+
+    _wxDayMap = buildWxDayMap(periods);
+    mergeAndRender();
+    mergeAndRenderWaterLevelBg();
+    renderSummary();
+  }
+
+  function buildWxDayMap(periods) {
+    const map  = {};
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    let dayIdx = 0;
+
+    periods.forEach(p => {
+      const isNight = /night|tonight/i.test(p.name);
+      const d   = new Date(base);
+      d.setDate(base.getDate() + dayIdx);
+      const key = `${d.getMonth() + 1}/${d.getDate()}`;
+
+      if (!map[key]) map[key] = {};
+      if (isNight) {
+        if (!map[key].low && p.tempTxt) map[key].low = p.tempTxt;
+        dayIdx++;
+      } else {
+        if (!map[key].icon) {
+          Object.assign(map[key], { icon: p.iconUrl, desc: p.desc, high: p.tempTxt, wind: p.wind, gust: p.gust });
+        }
+      }
+    });
+    return map;
+  }
+
+  // ── Open-Meteo API ──────────────────────────────
+  const WIND_URL = 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=47.9048&longitude=-118.3046'
+    + '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,precipitation,weather_code,cloud_cover'
+    + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,windspeed_10m_max'
+    + '&wind_speed_unit=mph&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles&forecast_days=10';
+
+  const DIR_LABELS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  const degToDir = deg => DIR_LABELS[Math.round(deg / 22.5) % 16];
+
+  async function fetchWind() {
+    try {
+      const res = await fetch(WIND_URL);
+      const data = await res.json();
+      _omData = data.daily;
+      // Only render if using Open-Meteo source
+      if (_forecastSource === 'openmeteo') {
+        renderOpenMeteoForecastWaterLevelBg(_omData);
+        renderWind(data.hourly); // Save and render hourly
+      }
+      // Don't overwrite _hourlyData when using WeatherAPI source
+    } catch (e) {
+      console.error('Wind fetch failed:', e);
+    }
+  }
+
+  function windBand(mph) {
+    if (mph <= 20) return { grad: 'url(#wgBlue)',   gFill: '#c8e6f5', gStr: '#1a6090', num: 'rgba(240,250,255,0.95)', gustNum: '#1a5080' };
+    if (mph <= 30) return { grad: 'url(#wgOrange)', gFill: '#f5dcc0', gStr: '#a05010', num: 'rgba(255,240,220,0.95)', gustNum: '#c87030' };
+    return           { grad: 'url(#wgRed)',    gFill: '#f5d0d0', gStr: '#901020', num: 'rgba(255,220,220,0.95)', gustNum: '#e05050' };
+  }
+
+  let _windMode = '2hr'; // 'hourly' | '2hr'
+  let _hourlyData = null;
+
+
+  function renderWind(hourly) {
+    _hourlyData = hourly;
+    const chart = document.getElementById('windChart');
+    chart.innerHTML = '';
+
+    const { time, wind_speed_10m: speeds, wind_gusts_10m: gusts, wind_direction_10m: dirs, precipitation_mm: precips = [], chance_of_rain: rainChances = [], weather_code: conditions = [] } = hourly;
+    const now   = new Date();
+    const begin = Math.max(0, time.findIndex(t => new Date(t) >= new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())));
+
+    // Always use hourly slots for the curve chart (up to 48h)
+    const slots = [];
+    for (let i = 0; i < 48; i++) {
+      const idx = begin + i;
+      if (idx >= time.length) break;
+      slots.push({
+        t: new Date(time[idx]),
+        spd: speeds[idx] || 0,
+        gust: gusts[idx] || 0,
+        dir: dirs[idx] || 0,
+        rainChance: rainChances[idx] || 0,
+        cond: conditions[idx] || ''
+      });
+    }
+    if (!slots.length) { renderSummary(); return; }
+
+    const maxVal = Math.max(...slots.map(s => s.gust || 0), 1);
+
+    // SVG dimensions — full width of container
+    const W = 900, H = 220, padL = 8, padR = 8, padT = 90, padB = 36;
+    const n = slots.length;
+    const xOf = i => padL + (i / (n - 1)) * (W - padL - padR);
+    const yOf = v => padT + (1 - v / maxVal) * (H - padT - padB);
+
+    // Build smooth cubic bezier paths
+    function makePath(vals) {
+      const pts = vals.map((v, i) => [xOf(i), yOf(v)]);
+      let d = `M ${pts[0][0]},${pts[0][1]}`;
+      for (let i = 1; i < pts.length; i++) {
+        const [x0, y0] = pts[i-1], [x1, y1] = pts[i];
+        const cx = (x0 + x1) / 2;
+        d += ` C ${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+      }
+      return { d, pts };
+    }
+
+    const gustPath = makePath(slots.map(s => s.gust));
+    const spdPath  = makePath(slots.map(s => s.spd));
+
+    // Fill under gust curve
+    const gustFill = gustPath.d + ` L ${xOf(n-1)},${H - padB} L ${xOf(0)},${H - padB} Z`;
+    // Fill under speed curve
+    const spdFill  = spdPath.d  + ` L ${xOf(n-1)},${H - padB} L ${xOf(0)},${H - padB} Z`;
+
+    // Day boundaries: vertical lines + centered date labels
+    const dayBounds = [];
+    let lastDay = -1;
+    slots.forEach((s, i) => {
+      if (s.t.getDate() !== lastDay) { lastDay = s.t.getDate(); dayBounds.push({ x: xOf(i), t: s.t, i }); }
+    });
+
+    const fmtHr  = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
+    const fmtDay = t => t.toLocaleDateString([], {weekday:'short'});
+
+    let dayLinesEl = '';
+    dayBounds.forEach((b, bi) => {
+      const nextX = bi + 1 < dayBounds.length ? dayBounds[bi+1].x : W - padR;
+      const cx = (b.x + nextX) / 2;
+      const label = `${fmtDay(b.t)} ${b.t.getMonth()+1}/${b.t.getDate()}`;
+      if (bi > 0) {
+        dayLinesEl += `<line x1="${b.x}" y1="${padT - 8}" x2="${b.x}" y2="${H - padB}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>`;
+      }
+      dayLinesEl += `<text x="${cx}" y="${H - 6}" text-anchor="middle" font-size="12" fill="rgba(150,190,220,0.8)" font-family="sans-serif" font-weight="600">${label}</text>`;
+    });
+
+    // Time labels every 6 hours along the top
+    let timeLabels = '';
+    slots.forEach((s, i) => {
+      const hr = s.t.getHours();
+      if (hr % 6 === 0 && i > 0) {
+        const x = xOf(i);
+        timeLabels += `<text x="${x}" y="${padT - 46}" text-anchor="middle" font-size="11" fill="rgba(126,200,227,0.6)" font-family="sans-serif">${fmtHr(s.t)}</text>`;
+      }
+    });
+
+    // Peak gust labels: time above, "X mph 💨" below, on the highest point per day group
+    let peakLabels = '';
+    dayBounds.forEach((b, bi) => {
+      const endI = bi + 1 < dayBounds.length ? dayBounds[bi+1].i : n;
+      const daySlots = slots.slice(b.i, endI);
+      const peakS = daySlots.reduce((a, c) => c.gust > a.gust ? c : a);
+      const pi = slots.indexOf(peakS);
+      const px = xOf(pi), py = yOf(peakS.gust);
+      if (peakS.gust > 0) {
+        peakLabels += `<circle cx="${px}" cy="${py}" r="4" fill="rgba(210,90,20,0.9)"/>`;
+        peakLabels += `<text x="${px}" y="${py - 20}" text-anchor="middle" font-size="11" fill="rgba(255,210,150,0.85)" font-family="sans-serif">${fmtHr(peakS.t)}</text>`;
+        peakLabels += `<text x="${px}" y="${py - 7}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(255,200,130,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;  // no emoji
+      }
+    });
+
+    // Legend — far left, two lines
+    const legend =
+      `<text x="${padL}" y="${padT - 68}" font-size="11" font-family="sans-serif" fill="rgba(80,160,210,0.9)">— wind</text>` +
+      `<text x="${padL}" y="${padT - 54}" font-size="11" font-family="sans-serif" fill="rgba(210,110,30,0.9)">— gusts</text>`;
+
+    // Horizontal gridlines every 5 mph
+    let gridLines = '';
+    const gridStep = 5;
+    for (let mph = gridStep; mph <= maxVal; mph += gridStep) {
+      const gy = yOf(mph);
+      gridLines += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+      gridLines += `<text x="${padL + 2}" y="${gy - 3}" font-size="8" fill="rgba(150,190,220,0.4)" font-family="sans-serif">${mph}</text>`;
+    }
+
+    const svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;overflow:visible;min-width:${W}px">
+      <defs>
+        <linearGradient id="cwGust" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(180,80,20,0.30)"/>
+          <stop offset="100%" stop-color="rgba(180,80,20,0.03)"/>
+        </linearGradient>
+        <linearGradient id="cwSpd" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(47,116,164,0.35)"/>
+          <stop offset="100%" stop-color="rgba(47,116,164,0.04)"/>
+        </linearGradient>
+      </defs>
+      ${legend}
+      ${gridLines}
+      ${timeLabels}
+      ${dayLinesEl}
+      <path d="${gustFill}" fill="url(#cwGust)"/>
+      <path d="${spdFill}"  fill="url(#cwSpd)"/>
+      <path d="${gustPath.d}" fill="none" stroke="rgba(210,110,30,0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${spdPath.d}"  fill="none" stroke="rgba(80,160,210,0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${peakLabels}
+    </svg>`;
+
+    chart.style.cssText = 'overflow-x:auto;-webkit-overflow-scrolling:touch;display:block;width:100%';
+    chart.innerHTML = svg;
+    renderSummary();
+  }
+
+  function renderOpenMeteoForecast(data) {
+    const grid = document.getElementById('combinedGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `38px repeat(${Math.min(10, data.time?.length || 0)}, 66px)`;
+
+    if (!data.time || !_lakeDays) return;
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const dates = data.time.map(d => {
+      const [y, m, day] = d.slice(0, 10).split('-');
+      return `${parseInt(m)}/${parseInt(day)}`;
+    });
+    const dayNames = data.time.map(d => {
+      const [dy, dm, dd] = d.slice(0, 10).split('-'); const day = new Date(+dy, +dm - 1, +dd).toLocaleDateString([], {weekday:'short'});
+      return day.charAt(0).toUpperCase() + day.slice(1);
+    });
+    const highs = data.temperature_2m_max;
+    const lows = data.temperature_2m_min;
+    const wind = data.windspeed_10m_max;
+    const precipProb = data.precipitation_probability_max;
+
+    function addLabel(text) {
+      const el = document.createElement('div');
+      el.className = 'row-label';
+      el.textContent = text;
+      grid.appendChild(el);
+    }
+
+    function addCell(html, cls) {
+      const el = document.createElement('div');
+      el.className = 'fc ' + cls;
+      el.innerHTML = html;
+      grid.appendChild(el);
+    }
+
+    const todayClass = i => dates[i] === `${todayStr.slice(5,7).replace(/^0/, '')}/${todayStr.slice(8).replace(/^0/, '')}` ? ' is-today' : '';
+
+    // Row: date
+    addLabel('');
+    dates.forEach((d, i) => addCell(`<div style="line-height:1">${d}</div><div style="font-size:8px;color:#5a9ec0;margin-top:3px;line-height:1">${dayNames[i]}</div>`, `fc-date${todayClass(i)}`));
+
+    // Row: high
+    addLabel('high');
+    dates.forEach((d, i) => addCell(`<span style="color:#f0c878;font-weight:600">${Math.round(highs[i])}°</span>`, `fc-high${todayClass(i)}`));
+
+    // Row: low
+    addLabel('low');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3">${Math.round(lows[i])}°</span>`, `fc-low${todayClass(i)}`));
+
+    // Row: wind
+    addLabel('wind');
+    dates.forEach((d, i) => addCell(`<span style="color:#a0cce8;font-size:11px">${Math.round(wind[i])} mph</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: precip
+    addLabel('rain');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3;font-size:11px">${precipProb[i] || 0}% 🌧</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: lake level
+    addLabel('level');
+    dates.forEach((d, i) => {
+      const dateIdx = _lakeDays.dates.indexOf(d);
+      if (dateIdx >= 0) {
+        const levelVal = _lakeDays.elevs[dateIdx];
+        const HALF_SPAN = 5, center = _lakeDays.elevs.reduce((a, b) => a + b, 0) / _lakeDays.elevs.length;
+        const SCALE_MIN = center - HALF_SPAN, range = HALF_SPAN * 2;
+        const h = Math.round(((levelVal - SCALE_MIN) / range) * 41 + 3);
+        const isHigh = _lakeDays.elevs.indexOf(Math.max(..._lakeDays.elevs)) === dateIdx;
+        const isLow = _lakeDays.elevs.indexOf(Math.min(..._lakeDays.elevs)) === dateIdx;
+        const barCls = isHigh ? ' is-high' : isLow ? ' is-low' : '';
+        const elevCls = `fc-elev${isHigh ? ' is-high' : isLow ? ' is-low' : ''}`;
+        addCell(
+          `<div class="day-bar${barCls}" style="width:16px;height:${h}px"></div><div class="${elevCls}">${levelVal.toFixed(1)}</div>`,
+          `fc-level${todayClass(i)}`
+        );
+      } else {
+        addCell('—', `fc-level${todayClass(i)}`);
+      }
+    });
+  }
+
+  // ── WeatherAPI ─────────────────────────────────────────────
+  async function fetchWeatherAPI() {
+    if (WEATHERAPI_KEY === 'YOUR_WEATHERAPI_KEY_HERE') {
+      console.log('WeatherAPI: Add your free API key from weatherapi.com');
+      return;
+    }
+    try {
+      const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=47.9048,-118.3046&days=10&aqi=no`;
+      const res = await fetch(url);
+      const data = await res.json();
+      _weatherAPIData = data.forecast.forecastday;
+
+      // Also extract hourly data for wind chart
+      const hourlyData = { time: [], wind_speed_10m: [], wind_gusts_10m: [], wind_direction_10m: [], precipitation_mm: [], chance_of_rain: [], weather_code: [] };
+      data.forecast.forecastday.forEach(day => {
+        day.hour.forEach(h => {
+          hourlyData.time.push(h.time);
+          hourlyData.wind_speed_10m.push(h.wind_mph);
+          hourlyData.wind_gusts_10m.push(h.gust_mph);
+          hourlyData.wind_direction_10m.push(h.wind_degree);
+          hourlyData.precipitation_mm.push(h.precip_mm || 0);
+          hourlyData.chance_of_rain.push(h.chance_of_rain || 0);
+          hourlyData.weather_code.push(h.condition?.text || '');
+        });
+      });
+
+      _weatherAPIHourlyData = hourlyData;
+
+      if (_forecastSource === 'weatherapi') {
+        renderWeatherAPIForecastWaterLevelBg(_weatherAPIData);
+        renderSummary();
+      }
+      // Render hourly wind if WeatherAPI is the selected source
+      if (_forecastSource === 'weatherapi' && hourlyData.time.length) renderWind(hourlyData);
+    } catch (e) {
+      console.error('WeatherAPI fetch failed:', e);
+    }
+  }
+
+  function renderWeatherAPIForecast(days) {
+    const grid = document.getElementById('combinedGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `38px repeat(${Math.min(10, days.length)}, 66px)`;
+
+    const dates = days.map((d, i) => {
+      const [y, m, day] = d.date.split('-');
+      return `${parseInt(m)}/${parseInt(day)}`;
+    });
+
+    const dayNames = days.map(d => {
+      const [_y,_m,_d] = d.date.split('-'); const date = new Date(+_y, +_m-1, +_d);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    const highs = days.map(d => Math.round(d.day.maxtemp_f));
+    const lows = days.map(d => Math.round(d.day.mintemp_f));
+    const wind = days.map(d => Math.round(d.day.maxwind_mph));
+    const precipProb = days.map(d => d.day.daily_chance_of_rain);
+
+    function addLabel(text) {
+      const el = document.createElement('div');
+      el.className = 'row-label';
+      el.textContent = text;
+      grid.appendChild(el);
+    }
+
+    function addCell(html, cls) {
+      const el = document.createElement('div');
+      el.className = 'fc ' + cls;
+      el.innerHTML = html;
+      grid.appendChild(el);
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayClass = i => dates[i] === `${todayStr.slice(5,7).replace(/^0/, '')}/${todayStr.slice(8).replace(/^0/, '')}` ? ' is-today' : '';
+
+    // Row: date
+    addLabel('');
+    dates.forEach((d, i) => addCell(`<div style="line-height:1">${d}</div><div style="font-size:8px;color:#5a9ec0;margin-top:3px;line-height:1">${dayNames[i]}</div>`, `fc-date${todayClass(i)}`));
+
+    // Row: high
+    addLabel('high');
+    dates.forEach((d, i) => addCell(`<span style="color:#f0c878;font-weight:600">${highs[i]}°</span>`, `fc-high${todayClass(i)}`));
+
+    // Row: low
+    addLabel('low');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3">${lows[i]}°</span>`, `fc-low${todayClass(i)}`));
+
+    // Row: wind
+    addLabel('wind');
+    dates.forEach((d, i) => addCell(`<span style="color:#a0cce8;font-size:11px">${wind[i]} mph</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: precip
+    addLabel('rain');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3;font-size:11px">${precipProb[i]}% 🌧</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: lake level
+    addLabel('level');
+    dates.forEach((d, i) => {
+      const dateIdx = _lakeDays.dates.indexOf(d);
+      if (dateIdx >= 0) {
+        const levelVal = _lakeDays.elevs[dateIdx];
+        const HALF_SPAN = 5, center = _lakeDays.elevs.reduce((a, b) => a + b, 0) / _lakeDays.elevs.length;
+        const SCALE_MIN = center - HALF_SPAN, range = HALF_SPAN * 2;
+        const h = Math.round(((levelVal - SCALE_MIN) / range) * 41 + 3);
+        const isHigh = _lakeDays.elevs.indexOf(Math.max(..._lakeDays.elevs)) === dateIdx;
+        const isLow = _lakeDays.elevs.indexOf(Math.min(..._lakeDays.elevs)) === dateIdx;
+        const barCls = isHigh ? ' is-high' : isLow ? ' is-low' : '';
+        const elevCls = `fc-elev${isHigh ? ' is-high' : isLow ? ' is-low' : ''}`;
+        addCell(`<div class="day-bar${barCls}" style="width:16px;height:${h}px"></div><div class="${elevCls}">${levelVal.toFixed(1)}</div>`, `fc-level${todayClass(i)}`);
+      } else {
+        addCell('—', `fc-level${todayClass(i)}`);
+      }
+    });
+  }
+
+  // ── OpenWeather ────────────────────────────────────────────
+  async function fetchOpenWeather() {
+    if (OPENWEATHER_KEY === 'YOUR_OPENWEATHER_KEY_HERE') {
+      console.log('OpenWeather: Add your free API key from openweathermap.org');
+      return;
+    }
+    try {
+      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=47.9048&lon=-118.3046&appid=${OPENWEATHER_KEY}&units=imperial&cnt=40`;
+      const res = await fetch(url);
+      const data = await res.json();
+      _openWeatherData = processOpenWeatherData(data.list);
+      if (_forecastSource === 'openweather') {
+        renderOpenWeatherForecastWaterLevelBg(_openWeatherData);
+      }
+    } catch (e) {
+      console.error('OpenWeather fetch failed:', e);
+    }
+  }
+
+  function processOpenWeatherData(list) {
+    const byDate = {};
+    list.forEach(item => {
+      const d = new Date(item.dt * 1000);
+      const key = `${d.getMonth() + 1}/${d.getDate()}`;
+      if (!byDate[key]) byDate[key] = { temps: [], winds: [], rains: [], probs: [] };
+      byDate[key].temps.push(item.main.temp_max || item.main.temp);
+      byDate[key].winds.push(item.wind.speed * 2.237); // m/s to mph
+      byDate[key].rains.push(item.rain?.['3h'] || 0);
+      byDate[key].probs.push(item.clouds?.all || 0);
+    });
+    return Object.entries(byDate).map(([date, data]) => ({
+      date,
+      high: Math.round(Math.max(...data.temps)),
+      low: Math.round(Math.min(...data.temps)),
+      wind: Math.round(Math.max(...data.winds)),
+      precip: Math.round(data.probs[0])
+    })).slice(0, 10);
+  }
+
+  function renderOpenWeatherForecast(days) {
+    const grid = document.getElementById('combinedGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `38px repeat(${Math.min(10, days.length)}, 66px)`;
+
+    if (!_lakeDays) return;
+
+    const dates = days.map(d => d.date);
+    const dayNames = dates.map(d => {
+      const [m, day] = d.split('/');
+      const date = new Date(`${new Date().getFullYear()}-${m}-${day}`);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    function addLabel(text) {
+      const el = document.createElement('div');
+      el.className = 'row-label';
+      el.textContent = text;
+      grid.appendChild(el);
+    }
+
+    function addCell(html, cls) {
+      const el = document.createElement('div');
+      el.className = 'fc ' + cls;
+      el.innerHTML = html;
+      grid.appendChild(el);
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayClass = i => dates[i] === `${todayStr.slice(5,7).replace(/^0/, '')}/${todayStr.slice(8).replace(/^0/, '')}` ? ' is-today' : '';
+
+    // Row: date
+    addLabel('');
+    dates.forEach((d, i) => addCell(`<div style="line-height:1">${d}</div><div style="font-size:8px;color:#5a9ec0;margin-top:3px;line-height:1">${dayNames[i]}</div>`, `fc-date${todayClass(i)}`));
+
+    // Row: high
+    addLabel('high');
+    dates.forEach((d, i) => addCell(`<span style="color:#f0c878;font-weight:600">${days[i].high}°</span>`, `fc-high${todayClass(i)}`));
+
+    // Row: low
+    addLabel('low');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3">${days[i].low}°</span>`, `fc-low${todayClass(i)}`));
+
+    // Row: wind
+    addLabel('wind');
+    dates.forEach((d, i) => addCell(`<span style="color:#a0cce8;font-size:11px">${days[i].wind} mph</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: precip
+    addLabel('rain');
+    dates.forEach((d, i) => addCell(`<span style="color:#7ec8e3;font-size:11px">${days[i].precip}% 🌧</span>`, `fc-wind${todayClass(i)}`));
+
+    // Row: lake level
+    addLabel('level');
+    dates.forEach((d, i) => {
+      const dateIdx = _lakeDays.dates.indexOf(d);
+      if (dateIdx >= 0) {
+        const levelVal = _lakeDays.elevs[dateIdx];
+        const HALF_SPAN = 5, center = _lakeDays.elevs.reduce((a, b) => a + b, 0) / _lakeDays.elevs.length;
+        const SCALE_MIN = center - HALF_SPAN, range = HALF_SPAN * 2;
+        const h = Math.round(((levelVal - SCALE_MIN) / range) * 41 + 3);
+        const isHigh = _lakeDays.elevs.indexOf(Math.max(..._lakeDays.elevs)) === dateIdx;
+        const isLow = _lakeDays.elevs.indexOf(Math.min(..._lakeDays.elevs)) === dateIdx;
+        const barCls = isHigh ? ' is-high' : isLow ? ' is-low' : '';
+        const elevCls = `fc-elev${isHigh ? ' is-high' : isLow ? ' is-low' : ''}`;
+        addCell(`<div class="day-bar${barCls}" style="width:16px;height:${h}px"></div><div class="${elevCls}">${levelVal.toFixed(1)}</div>`, `fc-level${todayClass(i)}`);
+      } else {
+        addCell('—', `fc-level${todayClass(i)}`);
+      }
+    });
+  }
+
+  // ── Weather emoji helpers ─────────────────────────────────
+  function weatherCodeToEmoji(code) {
+    if (code === 0) return '☀️';
+    if (code <= 2) return '🌤️';
+    if (code === 3) return '☁️';
+    if (code <= 48) return '🌫️';
+    if (code <= 55) return '🌦️';
+    if (code <= 65) return '🌧️';
+    if (code <= 77) return '🌨️';
+    if (code <= 82) return '🌧️';
+    return '⛈️';
+  }
+  function descToEmoji(desc, hour) {
+    const d = (desc || '').toLowerCase();
+    const isNight = hour >= 18 || hour < 6; // 6pm to 6am
+
+    if (/thunder|storm/.test(d)) return isNight ? '⛈️' : '⛈️';
+    if (/snow/.test(d)) return isNight ? '🌨️' : '🌨️';
+    if (/rain|shower|drizzle/.test(d)) return isNight ? '🌧️' : '🌧️';
+    if (/fog|mist/.test(d)) return isNight ? '🌫️' : '🌫️';
+    if (/cloud|overcast|cloudy/.test(d)) return isNight ? '☁️' : '⛅';
+    if (/clear|sunny/.test(d)) return isNight ? '🌙' : '☀️';
+    return isNight ? '🌙' : '🌤️';
+  }
+
+  // ── Water Level Column Visualization ─────────────────────
+  function renderWaterLevelBackground(dates, dayNames, highs, lows, wind, precipProb, emojis) {
+    const grid = document.getElementById('waterLevelGrid');
+    grid.innerHTML = '';
+    const todayKey = (() => { const t = new Date(); return `${t.getMonth()+1}/${t.getDate()}`; })();
+
+    // Build historical prefix: up to 4 days before the first forecast date
+    const histCols = [];
+    if (_showHistoricWaterLevels && _lakeDays && dates.length) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      for (let offset = 4; offset >= 1; offset--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - offset);
+        const key = `${d.getMonth() + 1}/${d.getDate()}`;
+        if (!dates.includes(key)) {
+          const dayName = d.toLocaleDateString([], {weekday:'short'});
+          const idx = _lakeDays.dates.indexOf(key);
+          histCols.push({ date: key, dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1), elev: idx >= 0 ? _lakeDays.elevs[idx] : null, hist: true });
+        }
+      }
+    }
+
+    // Forecast elevations
+    const fcElevs = dates.map(d => {
+      if (!_lakeDays) return null;
+      const idx = _lakeDays.dates.indexOf(d);
+      return idx >= 0 ? _lakeDays.elevs[idx] : null;
+    });
+
+    // Compute scale across all elevations (historical + forecast)
+    const allElevs = [...histCols.map(h => h.elev), ...fcElevs].filter(e => e !== null);
+    const minElev = allElevs.length ? Math.min(...allElevs) : 0;
+    const maxElev = allElevs.length ? Math.max(...allElevs) : 1;
+    const range = maxElev - minElev || 1;
+    const MARGIN = 15, USABLE = 30;
+
+    function makeWaterZone(elev) {
+      const waveBottom = elev !== null ? Math.round(MARGIN + (elev - minElev) / range * USABLE) : MARGIN;
+      const fillH = waveBottom + 9;
+      const badgeBottom = waveBottom + 14;
+      const levelText = elev !== null ? elev.toFixed(1) + "'" : '—';
+      return `<div class="wl-water-zone">
+          <div class="wl-fill" style="height:${fillH}px"></div>
+          <svg style="position:absolute;bottom:${waveBottom}px;left:-2px;width:calc(100% + 4px);height:18px;z-index:3;overflow:visible"
+               viewBox="0 0 82 18" preserveAspectRatio="none">
+            <path d="M0,9 C9,3 18,15 27,9 C36,3 45,15 54,9 C63,3 72,13 82,9 L82,18 L0,18 Z" fill="#2F74A4"/>
+            <path d="M0,9 C9,3 18,15 27,9 C36,3 45,15 54,9 C63,3 72,13 82,9"
+              stroke="#7ec8e3" stroke-width="1.5" fill="none"
+              style="filter:drop-shadow(0 0 3px rgba(77,184,232,0.8))"/>
+          </svg>
+          <div class="wl-badge" style="bottom:${badgeBottom}px">${levelText}</div>
+        </div>`;
+    }
+
+    // Render historical columns (day + date only, no weather)
+    histCols.forEach(h => {
+      const col = document.createElement('div');
+      col.className = 'wl-col';
+      col.style.opacity = '0.6';
+      col.innerHTML = `
+        <div class="wl-rows" style="flex:1">
+          <div class="wl-r wl-r-day"><span class="wl-day">${h.dayName}</span></div>
+          <div class="wl-r wl-r-date"><span class="wl-date">${h.date}</span></div>
+        </div>
+        ${makeWaterZone(h.elev)}`;
+      grid.appendChild(col);
+    });
+
+    // Compute warm-day threshold: max high − min(5°, range × 30%)
+    const validHighs = highs.filter(h => h != null);
+    const maxHigh = validHighs.length ? Math.max(...validHighs) : null;
+    const minHigh = validHighs.length ? Math.min(...validHighs) : null;
+    const highRange = maxHigh != null ? maxHigh - minHigh : 0;
+    const warmThreshold = maxHigh != null ? maxHigh - Math.min(5, highRange * 0.3) : Infinity;
+
+    // Render forecast columns
+    dates.forEach((d, i) => {
+      const elev = fcElevs[i];
+      const col = document.createElement('div');
+      col.className = 'wl-col';
+
+      const emoji = emojis ? (emojis[i] || '🌤️') : '🌤️';
+      const high = highs[i] != null ? Math.round(highs[i]) + '°' : '—';
+      const low  = lows[i]  != null ? Math.round(lows[i])  + '°' : '—';
+      const spd  = wind[i]  != null ? Math.round(wind[i]) + ' mph' : '—';
+      const rain = precipProb[i] != null ? precipProb[i] + '% 🌧' : '—';
+
+      const isWarm = highs[i] != null && highs[i] >= warmThreshold;
+      const warmBg = isWarm
+        ? 'background: linear-gradient(to bottom, rgba(180,70,0,0.50) 0%, rgba(180,70,0,0.20) 45%, transparent 80%);'
+        : '';
+
+      const isToday = d === todayKey;
+      const todayBadge = isToday
+        ? `<div style="position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:8px;font-weight:700;letter-spacing:0.12em;color:rgba(77,184,232,0.9);text-transform:uppercase;z-index:10;pointer-events:none">Today</div>`
+        : '';
+
+      col.style.position = 'relative';
+      col.innerHTML = `
+        ${todayBadge}
+        <div class="wl-rows" style="${warmBg}${isToday ? 'outline:1px solid rgba(77,184,232,0.35);outline-offset:-1px;' : ''}">
+          <div class="wl-r wl-r-day"><span class="wl-day">${dayNames[i]}</span></div>
+          <div class="wl-r wl-r-date"><span class="wl-date">${d}</span></div>
+          <div class="wl-r wl-r-high"><span class="wl-high">${high}</span></div>
+          <div class="wl-r wl-r-low" style="font-size:20px;padding:0 0 6px">${emoji}</div>
+          <div class="wl-r wl-r-low"><span class="wl-low">${low}</span></div>
+          <div class="wl-r wl-r-wind"><span class="wl-wind">${spd}</span></div>
+          <div class="wl-r wl-r-rain"><span class="wl-rain">${rain}</span></div>
+        </div>
+        ${makeWaterZone(elev)}`;
+
+      grid.appendChild(col);
+    });
+  }
+
+  function mergeAndRenderWaterLevelBg() {
+    if (!_wxDayMap) return;
+
+    // Build forecast dates from today forward (let renderWaterLevelBackground add the 4 historical prefix days)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = `${today.getMonth() + 1}/${today.getDate()}`;
+    const dates = [];
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      dates.push(`${d.getMonth() + 1}/${d.getDate()}`);
+    }
+
+    const dayNames = dates.map(d => {
+      const [m, day] = d.split('/');
+      const date = new Date(`${today.getFullYear()}-${m}-${day}`);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    const parseTemp = t => {
+      if (t == null) return null;
+      const m = String(t).match(/-?\d+/);
+      return m ? parseInt(m[0], 10) : null;
+    };
+
+    const highs = dates.map(d => parseTemp((_wxDayMap[d] || {}).high));
+    const lows  = dates.map(d => parseTemp((_wxDayMap[d] || {}).low));
+
+    const wind = dates.map(d => {
+      const wx = _wxDayMap[d] || {};
+      if (!wx.wind) return 0;
+      const m = wx.wind.match(/(\d+)/);
+      return m ? parseInt(m[1]) : 0;
+    });
+
+    const precip = dates.map(d => {
+      const wx = _wxDayMap[d] || {};
+      if (!wx.gust) return 0;
+      const m = wx.gust.match(/(\d+)/);
+      return m ? parseInt(m[1]) : 0;
+    });
+
+    const emojis = dates.map(d => descToEmoji((_wxDayMap[d] || {}).desc));
+
+    renderWaterLevelBackground(dates, dayNames, highs, lows, wind, precip, emojis);
+  }
+
+  function renderOpenMeteoForecastWaterLevelBg(data) {
+
+    const dates = data.time.map(d => {
+      const [y, m, day] = d.slice(0, 10).split('-');
+      return `${parseInt(m)}/${parseInt(day)}`;
+    });
+
+    const dayNames = data.time.map(d => {
+      const [dy, dm, dd] = d.slice(0, 10).split('-'); const day = new Date(+dy, +dm - 1, +dd).toLocaleDateString([], {weekday:'short'});
+      return day.charAt(0).toUpperCase() + day.slice(1);
+    });
+
+    const highs = data.temperature_2m_max;
+    const lows = data.temperature_2m_min;
+    const wind = data.windspeed_10m_max;
+    const precipProb = data.precipitation_probability_max;
+
+    const emojis = (data.weathercode || data.weather_code || []).map(weatherCodeToEmoji);
+
+    renderWaterLevelBackground(dates, dayNames, highs, lows, wind, precipProb, emojis);
+  }
+
+  function renderWeatherAPIForecastWaterLevelBg(days) {
+
+    const dates = days.map((d, i) => {
+      const [y, m, day] = d.date.split('-');
+      return `${parseInt(m)}/${parseInt(day)}`;
+    });
+
+    const dayNames = days.map(d => {
+      const [_y,_m,_d] = d.date.split('-'); const date = new Date(+_y, +_m-1, +_d);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    const highs = days.map(d => Math.round(d.day.maxtemp_f));
+    const lows = days.map(d => Math.round(d.day.mintemp_f));
+    const wind = days.map(d => Math.round(d.day.maxwind_mph));
+    const precipProb = days.map(d => d.day.daily_chance_of_rain);
+
+    const emojis = days.map(d => descToEmoji(d.day.condition.text));
+
+    renderWaterLevelBackground(dates, dayNames, highs, lows, wind, precipProb, emojis);
+  }
+
+  function renderOpenWeatherForecastWaterLevelBg(days) {
+
+    const dates = days.map(d => d.date);
+    const dayNames = dates.map(d => {
+      const [m, day] = d.split('/');
+      const date = new Date(`${new Date().getFullYear()}-${m}-${day}`);
+      const dayName = date.toLocaleDateString([], {weekday:'short'});
+      return dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    });
+
+    const emojis = days.map(d => descToEmoji(d.weather));
+
+    renderWaterLevelBackground(dates, dayNames,
+      days.map(d => d.high),
+      days.map(d => d.low),
+      days.map(d => d.wind),
+      days.map(d => d.precip),
+      emojis);
+  }
+
+  // ── NWS Hourly (api.weather.gov) ──────────────────────────
+
+  // Expand NWS interval-based gridpoint values (e.g. PT3H) into a per-hour UTC key map
+  function nwsExpandToHourMap(values, convertFn) {
+    const map = new Map();
+    (values || []).forEach(({ validTime, value }) => {
+      const [timeStr, durStr] = validTime.split('/');
+      const start = new Date(timeStr);
+      const hours = parseInt(durStr.match(/PT(\d+)H/)?.[1] || '1');
+      for (let h = 0; h < hours; h++) {
+        const key = new Date(start.getTime() + h * 3600000).toISOString().slice(0, 13); // "2026-04-27T11"
+        map.set(key, convertFn(value));
+      }
+    });
+    return map;
+  }
+
+  async function fetchNWSHourly() {
+    const statusEl = document.getElementById('sourceStatus');
+    if (statusEl) statusEl.textContent = 'Loading NWS hourly data…';
+    try {
+      const pointsRes = await fetch('https://api.weather.gov/points/47.9048,-118.3046', {
+        headers: { 'User-Agent': 'TheLakeApp/1.0' }
+      });
+      if (!pointsRes.ok) throw new Error(`Points: ${pointsRes.status}`);
+      const pointsData = await pointsRes.json();
+
+      // Fetch hourly forecast and gridpoints data in parallel
+      const [hourlyRes, gridRes] = await Promise.all([
+        fetch(pointsData.properties.forecastHourly, { headers: { 'User-Agent': 'TheLakeApp/1.0' } }),
+        fetch(pointsData.properties.forecastGridData, { headers: { 'User-Agent': 'TheLakeApp/1.0' } })
+      ]);
+      if (!hourlyRes.ok) throw new Error(`Hourly: ${hourlyRes.status}`);
+      if (!gridRes.ok) throw new Error(`Grid: ${gridRes.status}`);
+
+      const [hourlyData_raw, gridData] = await Promise.all([hourlyRes.json(), gridRes.json()]);
+      const periods = hourlyData_raw.properties.periods;
+      const gridProps = gridData.properties;
+
+      // Build per-hour gust lookup (km/h → mph)
+      const kmhToMph = v => Math.round(v * 0.621371);
+      const gustMap = nwsExpandToHourMap(gridProps.windGust?.values, kmhToMph);
+
+      const dirMap = {
+        'N':0,'NNE':22.5,'NE':45,'ENE':67.5,'E':90,'ESE':112.5,'SE':135,'SSE':157.5,
+        'S':180,'SSW':202.5,'SW':225,'WSW':247.5,'W':270,'WNW':292.5,'NW':315,'NNW':337.5
+      };
+
+      const hourlyData = {
+        time: [], wind_speed_10m: [], wind_gusts_10m: [],
+        wind_direction_10m: [], precipitation_mm: [], chance_of_rain: [], weather_code: []
+      };
+
+      periods.slice(0, 48).forEach(p => {
+        const t = new Date(p.startTime);
+        const timeStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')} ${String(t.getHours()).padStart(2,'0')}:00`;
+        const windMph = parseInt((p.windSpeed || '0').match(/\d+/)?.[0] || '0');
+        const windDeg = dirMap[p.windDirection] ?? 0;
+        const precip = p.probabilityOfPrecipitation?.value ?? 0;
+        const utcKey = t.toISOString().slice(0, 13);
+        const gustMph = gustMap.get(utcKey) ?? windMph;
+
+        hourlyData.time.push(timeStr);
+        hourlyData.wind_speed_10m.push(windMph);
+        hourlyData.wind_gusts_10m.push(gustMph);
+        hourlyData.wind_direction_10m.push(windDeg);
+        hourlyData.precipitation_mm.push(0);
+        hourlyData.chance_of_rain.push(precip);
+        hourlyData.weather_code.push(p.shortForecast || '');
+      });
+
+      _nwsHourlyData = hourlyData;
+      if (statusEl) statusEl.textContent = `NWS data loaded · ${periods.length} hours`;
+      if (_forecastSource === 'nws') renderWind(_nwsHourlyData);
+    } catch (e) {
+      console.error('NWS hourly fetch failed:', e);
+      if (statusEl) statusEl.textContent = `NWS load failed: ${e.message}`;
+    }
+  }
+
+  // ── Weather source toggle ──────────────────────────────────
+  document.querySelectorAll('input[name="weatherSource"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      _forecastSource = e.target.value;
+      handleSourceChange(); // Re-render 10-day forecast
+
+      if (_forecastSource === 'nws') {
+        if (_nwsHourlyData) {
+          renderWind(_nwsHourlyData);
+        } else {
+          fetchNWSHourly(); // Lazy-load NWS hourly data on first switch
+        }
+      } else if (_forecastSource === 'weatherapi') {
+        const statusEl = document.getElementById('sourceStatus');
+        if (statusEl) statusEl.textContent = '';
+        if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
+      }
+    });
+  });
+
+  // ── Summary Bar ───────────────────────────────────────────
+  function renderSummary() {
+    const el = document.getElementById('summaryBar');
+    if (!el) return;
+
+    const hl = s => `<strong style="color:#e8f4ff;font-weight:700">${s}</strong>`;
+    const BLUE   = 'rgba(47,116,164,0.65)';
+    const ORANGE = 'rgba(180,70,0,0.88)';
+    const blocks = [];
+
+    // ── Temperature: next 10 forecast days ──
+    const parseTemp = t => { const m = String(t || '').match(/-?\d+/); return m ? parseInt(m[0]) : null; };
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    let highsByDate = [];
+
+    if (_forecastSource === 'weatherapi' && _weatherAPIData) {
+      const todayStr = today.toISOString().slice(0, 10);
+      _weatherAPIData.filter(d => d.date >= todayStr).slice(0, 10).forEach(d => {
+        const [_y, _m, _dd] = d.date.split('-');
+        const dt = new Date(+_y, +_m - 1, +_dd);
+        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: Math.round(d.day.maxtemp_f) });
+      });
+    } else if (_wxDayMap) {
+      for (let i = 0; i < 10; i++) {
+        const d = new Date(today); d.setDate(today.getDate() + i);
+        const key = `${d.getMonth()+1}/${d.getDate()}`;
+        const wx = _wxDayMap[key];
+        const high = wx ? parseTemp(wx.high) : null;
+        if (high !== null) highsByDate.push({ date: `${d.toLocaleDateString([],{weekday:'short'})} ${key}`, high });
+      }
+    }
+
+    if (highsByDate.length) {
+      const highs = highsByDate.map(d => d.high);
+      const avgHigh = Math.round(highs.reduce((a, b) => a + b, 0) / highs.length);
+      const maxHigh = Math.max(...highs);
+      const minHigh = Math.min(...highs);
+      const warmThreshold = maxHigh - Math.min(5, (maxHigh - minHigh) * 0.3);
+
+      const sorted = [...highsByDate].sort((a, b) => b.high - a.high);
+      const top2 = [];
+      for (const d of sorted) {
+        if (!top2.length || Math.abs(d.high - top2[top2.length-1].high) >= 1) { top2.push(d); if (top2.length === 2) break; }
+      }
+      const peakDays = highsByDate.filter(d => d.high === maxHigh);
+      let peakStr;
+      if (peakDays.length > 1) {
+        peakStr = `${hl(maxHigh + '°')} on ${peakDays.map(d => hl(d.date)).join(' and ')}`;
+      } else if (top2.length === 2 && top2[0].high > top2[1].high) {
+        peakStr = `${hl(top2[0].high + '°')} on ${hl(top2[0].date)}, with ${hl(top2[1].high + '°')} on ${hl(top2[1].date)}`;
+      } else {
+        peakStr = `${hl(maxHigh + '°')} on ${hl(top2[0].date)}`;
+      }
+
+      // ── SVG curve chart: 10-day high temps ──
+      const svgW = 560, svgH = 70, padL = 2, padR = 2, padT = 16, padB = 18;
+      const n = highsByDate.length;
+      const xOf = i => padL + (i / (n - 1)) * (svgW - padL - padR);
+      const yOf = v => padT + (1 - (v - minHigh) / Math.max(1, maxHigh - minHigh)) * (svgH - padT - padB);
+
+      const pts = highsByDate.map((d, i) => [xOf(i), yOf(d.high)]);
+      let curvePath = `M ${pts[0][0]},${pts[0][1]}`;
+      for (let i = 1; i < pts.length; i++) {
+        const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+        const cx = (x0 + x1) / 2;
+        curvePath += ` C ${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+      }
+      const fillPath = curvePath + ` L ${pts[pts.length-1][0]},${svgH - padB} L ${pts[0][0]},${svgH - padB} Z`;
+
+      const tempLabels = highsByDate.map((d, i) => {
+        const x = xOf(i), y = yOf(d.high);
+        const warm = d.high >= warmThreshold;
+        const dotColor = warm ? 'rgba(210,90,20,0.95)' : 'rgba(180,160,60,0.8)';
+        const labelColor = warm ? 'rgba(220,130,60,1)' : 'rgba(160,180,200,0.75)';
+        const dayShort = d.date.split(' ')[0];
+        return `<circle cx="${x}" cy="${y}" r="3" fill="${dotColor}"/>` +
+               `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="8" font-weight="600" fill="${labelColor}" font-family="sans-serif">${d.high}°</text>` +
+               `<text x="${x}" y="${svgH - 4}" text-anchor="middle" font-size="8" fill="${labelColor}" font-family="sans-serif">${dayShort}</text>`;
+      }).join('');
+
+      const tempSentence = `Average high ${hl(avgHigh + '°')}, peaking at ${peakStr}.`;
+      const tempChart = `<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" style="display:block;overflow:visible">` +
+        `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">` +
+        `<stop offset="0%" stop-color="rgba(180,90,20,0.35)"/>` +
+        `<stop offset="100%" stop-color="rgba(180,90,20,0.04)"/>` +
+        `</linearGradient></defs>` +
+        `<path d="${fillPath}" fill="url(#tg)"/>` +
+        `<path d="${curvePath}" fill="none" stroke="rgba(200,110,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+        tempLabels + `</svg>` +
+        `<div style="text-align:center;font-size:11px;color:#7ec8e3;margin-top:6px;line-height:1.6">${tempSentence}</div>`;
+
+      blocks.push(`<div>${tempChart}</div>`);
+    }
+
+    // ── Wind: next 48 hours from _hourlyData ──
+    if (_hourlyData) {
+      const now = new Date();
+      const slots = _hourlyData.time.map((t, i) => ({
+        t: new Date(t.replace(' ', 'T')),
+        spd: _hourlyData.wind_speed_10m[i],
+        gust: _hourlyData.wind_gusts_10m[i]
+      })).filter(x => x.t >= now).slice(0, 48);
+
+      if (slots.length) {
+        const avgWind = Math.round(slots.reduce((a, x) => a + x.spd, 0) / slots.length);
+        const maxGust = Math.max(...slots.map(x => x.gust));
+        const minGust = Math.min(...slots.map(x => x.gust));
+        const gustThreshold = maxGust - Math.min(5, (maxGust - minGust) * 0.3);
+
+        const peaks = [];
+        for (let i = 1; i < slots.length - 1; i++) {
+          if (slots[i].gust >= slots[i-1].gust && slots[i].gust >= slots[i+1].gust && slots[i].gust > 0) peaks.push(slots[i]);
+        }
+        const absMax = slots.reduce((a, b) => b.gust > a.gust ? b : a);
+        if (!peaks.includes(absMax)) peaks.unshift(absMax);
+        peaks.sort((a, b) => b.gust - a.gust);
+        const topPeaks = [];
+        for (const p of peaks) {
+          if (topPeaks.every(tp => Math.abs(p.t - tp.t) >= 4 * 3600000)) { topPeaks.push(p); if (topPeaks.length === 2) break; }
+        }
+
+        const fmtHr = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
+        const fmtDay = t => t.toLocaleDateString([], {weekday:'short'});
+        const fmtPeak = t => `${fmtHr(t)} ${fmtDay(t)} ${t.getMonth()+1}/${t.getDate()}`;
+        const peakStr = topPeaks.length ? ', peaking at ' + topPeaks.map(p => hl(fmtPeak(p.t))).join(' and ') : '';
+
+        // ── SVG curve chart: 48-hour gust ──
+        const wsvgW = 560, wsvgH = 80, wpadL = 2, wpadR = 2, wpadT = 32, wpadB = 18;
+        const wn = slots.length;
+        const wxOf = i => wpadL + (i / (wn - 1)) * (wsvgW - wpadL - wpadR);
+        const wyOf = v => wpadT + (1 - v / Math.max(1, maxGust)) * (wsvgH - wpadT - wpadB);
+
+        const wpts = slots.map((s, i) => [wxOf(i), wyOf(s.gust)]);
+        let wcurve = `M ${wpts[0][0]},${wpts[0][1]}`;
+        for (let i = 1; i < wpts.length; i++) {
+          const [x0, y0] = wpts[i-1], [x1, y1] = wpts[i];
+          const cx = (x0 + x1) / 2;
+          wcurve += ` C ${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+        }
+        const wfill = wcurve + ` L ${wpts[wpts.length-1][0]},${wsvgH - wpadB} L ${wpts[0][0]},${wsvgH - wpadB} Z`;
+
+        // Day-boundary lines: collect boundary x positions first, then center labels between them
+        const dayBounds = []; // {x, label}
+        let lastDay2 = -1;
+        slots.forEach((s, i) => {
+          const d = s.t.getDate();
+          if (d !== lastDay2) { lastDay2 = d; dayBounds.push({ x: wxOf(i), t: s.t }); }
+        });
+        let dayLines = '';
+        dayBounds.forEach((b, bi) => {
+          dayLines += `<line x1="${b.x}" y1="${wpadT - 6}" x2="${b.x}" y2="${wsvgH - wpadB}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>`;
+          // Center label between this boundary and the next (or end)
+          const nextX = bi + 1 < dayBounds.length ? dayBounds[bi + 1].x : wsvgW - wpadR;
+          const cx = (b.x + nextX) / 2;
+          const label = `${fmtDay(b.t)} ${b.t.getMonth()+1}/${b.t.getDate()}`;
+          dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="8" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
+        });
+
+        // Orange dots + label (time on top, mph + emoji below) centered over each windy run
+        let windyDots = '';
+        let wi = 0;
+        while (wi < slots.length) {
+          if (slots[wi].gust < gustThreshold) { wi++; continue; }
+          let wj = wi;
+          while (wj < slots.length && slots[wj].gust >= gustThreshold) wj++;
+          const run = slots.slice(wi, wj);
+          run.forEach((s, k) => {
+            windyDots += `<circle cx="${wxOf(wi + k)}" cy="${wyOf(s.gust)}" r="2.5" fill="rgba(210,90,20,0.9)"/>`;
+          });
+          const peakS = run.reduce((a, b) => b.gust > a.gust ? b : a);
+          const cx = (wxOf(wi) + wxOf(wj - 1)) / 2;
+          const peakY = wyOf(peakS.gust);
+          // Time label above mph label
+          const timeLabel = run.length === 1
+            ? fmtHr(run[0].t)
+            : `${fmtHr(run[0].t)}–${fmtHr(run[run.length-1].t)}`;
+          windyDots += `<text x="${cx}" y="${peakY - 16}" text-anchor="middle" font-size="7.5" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
+          windyDots += `<text x="${cx}" y="${peakY - 6}" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
+          wi = wj;
+        }
+
+        const windSentence = `Wind averaging ${hl(avgWind + ' mph')} over the next 48 hours, with gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}.`;
+        const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
+          `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
+          `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
+          `<stop offset="100%" stop-color="rgba(47,116,164,0.05)"/>` +
+          `</linearGradient></defs>` +
+          dayLines +
+          `<path d="${wfill}" fill="url(#wg)"/>` +
+          `<path d="${wcurve}" fill="none" stroke="rgba(80,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+          windyDots + `</svg>` +
+          `<div style="text-align:center;font-size:11px;color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
+
+        blocks.push(`<div style="margin-top:20px">${windChart}</div>`);
+      }
+    }
+
+    // ── Water level trend ──
+    if (_lakeDays && _lakeDays.elevs && _lakeDays.elevs.length >= 2) {
+      const todayM = today.getMonth() + 1, todayD = today.getDate();
+      const todayKey = `${todayM}/${todayD}`;
+      const todayIdx = _lakeDays.dates.indexOf(todayKey);
+
+      // Use all dates but track which is today
+      const filteredDates = _lakeDays.dates;
+      const filteredElevs = _lakeDays.elevs;
+      const elevs = filteredElevs.filter(e => e != null && !isNaN(e));
+      if (elevs.length >= 2) {
+        // Base change calc on today→last, falling back to first if today not found
+        const todayElev = todayIdx >= 0 && filteredElevs[todayIdx] != null ? filteredElevs[todayIdx] : elevs[0];
+        const first = todayElev;
+        const last  = elevs[elevs.length - 1];
+        const avg   = Math.round((elevs.reduce((a, b) => a + b, 0) / elevs.length) * 10) / 10;
+        const change = Math.round((last - first) * 10) / 10;
+        const spread = Math.max(...elevs) - Math.min(...elevs);
+
+        let waterSentence;
+        if (spread <= 0.5) {
+          waterSentence = `Lake level is steady, averaging around ${hl(avg + '\'')} over the coming days.`;
+        } else {
+          const absChange = Math.abs(change);
+          const mid = elevs[Math.floor(elevs.length / 2)];
+          if (change > 0.5 && last > mid) {
+            waterSentence = `Lake level is forecasted to rise ${hl(absChange + '\'')} and continue rising through the period.`;
+          } else if (change > 0.5) {
+            waterSentence = `Lake level is forecasted to rise ${hl(absChange + '\'')} over the coming days.`;
+          } else if (change < -0.5 && last < mid) {
+            waterSentence = `Lake level is forecasted to drop ${hl(absChange + '\'')} and continue dropping through the period.`;
+          } else if (change < -0.5) {
+            waterSentence = `Lake level is forecasted to drop ${hl(absChange + '\'')} over the coming days.`;
+          } else if (change < 0) {
+            waterSentence = `Lake level is forecasted to drop slightly, averaging around ${hl(avg + '\'')} over the coming days.`;
+          } else {
+            waterSentence = `Lake level is forecasted to rise slightly, averaging around ${hl(avg + '\'')} over the coming days.`;
+          }
+        }
+        // Mini water level SVG curve chart
+        const wlW = 560, wlH = 64, wlPadL = 2, wlPadR = 2, wlPadT = 14, wlPadB = 18;
+        const wlN = elevs.length;
+        const wlMin = Math.min(...elevs) - 0.2;
+        const wlMax = Math.max(...elevs) + 0.2;
+        const wlXOf = i => wlPadL + (i / (wlN - 1)) * (wlW - wlPadL - wlPadR);
+        const wlYOf = v => wlPadT + (1 - (v - wlMin) / (wlMax - wlMin)) * (wlH - wlPadT - wlPadB);
+
+        const wlPts = elevs.map((v, i) => [wlXOf(i), wlYOf(v)]);
+        let wlCurve = `M ${wlPts[0][0]},${wlPts[0][1]}`;
+        for (let i = 1; i < wlPts.length; i++) {
+          const [x0, y0] = wlPts[i-1], [x1, y1] = wlPts[i];
+          const cx = (x0 + x1) / 2;
+          wlCurve += ` C ${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+        }
+        const wlFill = wlCurve + ` L ${wlPts[wlN-1][0]},${wlH - wlPadB} L ${wlPts[0][0]},${wlH - wlPadB} Z`;
+
+        // Day labels from _lakeDays.dates aligned with elevs
+        const wlDates = (filteredDates || []).slice(0, wlN);
+        const wlDotLabels = elevs.map((v, i) => {
+          const x = wlXOf(i), y = wlYOf(v);
+          const dateStr = wlDates[i] || '';
+          const isToday = dateStr === todayKey;
+          const dayPart = dateStr ? (() => {
+            const [mo, dd] = dateStr.split('/');
+            const d = new Date(new Date().getFullYear(), +mo - 1, +dd);
+            return d.toLocaleDateString([], {weekday:'short'});
+          })() : '';
+          const dotColor = isToday ? 'rgba(255,255,255,0.95)' : 'rgba(77,160,210,0.75)';
+          const dotR = isToday ? 4 : 2.5;
+          const labelColor = isToday ? 'rgba(255,255,255,0.9)' : 'rgba(120,180,220,0.55)';
+          const labelWeight = isToday ? '700' : '400';
+          // Today: show elevation above dot
+          const elevLabel = isToday ? `<text x="${x}" y="${y - 7}" text-anchor="middle" font-size="8" font-weight="700" fill="rgba(255,255,255,0.85)" font-family="sans-serif">${v}'</text>` : '';
+          return `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotColor}"/>` +
+                 elevLabel +
+                 `<text x="${x}" y="${wlH - 4}" text-anchor="middle" font-size="8" font-weight="${labelWeight}" fill="${labelColor}" font-family="sans-serif">${isToday ? 'Today' : dayPart}</text>`;
+        }).join('');
+
+        const wlChart = `<svg viewBox="0 0 ${wlW} ${wlH}" width="100%" height="${wlH}" style="display:block;overflow:visible">` +
+          `<defs><linearGradient id="wlg" x1="0" y1="0" x2="0" y2="1">` +
+          `<stop offset="0%" stop-color="rgba(47,116,164,0.4)"/>` +
+          `<stop offset="100%" stop-color="rgba(47,116,164,0.04)"/>` +
+          `</linearGradient></defs>` +
+          `<path d="${wlFill}" fill="url(#wlg)"/>` +
+          `<path d="${wlCurve}" fill="none" stroke="rgba(77,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+          wlDotLabels + `</svg>`;
+
+        blocks.push(`<div style="margin-top:20px">${wlChart}<div style="text-align:center;font-size:11px;color:#7ec8e3;margin-top:6px;line-height:1.6;padding:0 18px">${waterSentence}</div></div>`);
+      }
+    }
+
+    if (blocks.length) {
+      const heading = `<div style="text-align:center;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(77,184,232,0.5);margin-bottom:10px;padding:0 18px">Summary</div>`;
+      el.innerHTML = heading + blocks.join('');
+      el.style.display = 'block';
+    }
+  }
+
+  // ── Weather Underground PWS ───────────────────────────────
+  function renderWuData(obs) {
+    const el = document.getElementById('wuContent');
+    if (!el) return;
+    const im = obs.imperial;
+    const dirLabel = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(obs.winddir / 22.5) % 16];
+    const updated = new Date(obs.obsTimeLocal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const row = (icon, label, val) =>
+      `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(77,184,232,0.07)">
+        <span style="font-size:18px;width:26px;text-align:center">${icon}</span>
+        <span style="font-size:11px;color:#4a8aaa;text-transform:uppercase;letter-spacing:0.1em;flex:1">${label}</span>
+        <span style="font-size:15px;color:#e8f4ff;font-weight:500">${val}</span>
+      </div>`;
+
+    el.innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">` +
+        row('🌡️', 'Temperature', `${im.temp}°F`) +
+        row('💧', 'Humidity', `${obs.humidity}%`) +
+        row('💨', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
+        row('🌬️', 'Gusts', `${im.windGust} mph`) +
+        row('🌡️', 'Feels Like', `${im.heatIndex !== im.temp ? im.heatIndex : im.windChill}°F`) +
+        row('💦', 'Dew Point', `${im.dewpt}°F`) +
+        row('📊', 'Pressure', `${im.pressure} inHg`) +
+        row('☀️', 'UV Index', `${obs.uv}`) +
+        row('🌤️', 'Solar Rad.', `${obs.solarRadiation} W/m²`) +
+        row('🌧️', 'Precip Today', `${im.precipTotal}"`) +
+      `</div>` +
+      `<div style="text-align:right;font-size:10px;color:#3a6a82;margin-top:8px">Updated ${updated}</div>`;
+  }
+
+  async function fetchWunderground() {
+    try {
+      const url = `https://api.weather.com/v2/pws/observations/current?stationId=${WUNDERGROUND_STATION}&format=json&units=e&numericPrecision=decimal&apiKey=${WUNDERGROUND_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.observations && data.observations.length) {
+        renderWuData(data.observations[0]);
+      } else {
+        document.getElementById('wuContent').textContent = 'Station offline or no data available.';
+      }
+    } catch(e) {
+      document.getElementById('wuContent').textContent = 'Could not load station data.';
+    }
+  }
+
+  // ── Boot ──────────────────────────────────────────────────
+  fetchLakeData();
+  fetchWeatherAPI();  // WeatherAPI first (default source)
+  fetchWeather();     // NWS second
+  fetchWind();        // Open-Meteo wind (fallback if WeatherAPI not ready)
+  fetchOpenWeather();
+</script>
+</body>
+</html>
