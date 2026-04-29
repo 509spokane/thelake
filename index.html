@@ -732,12 +732,14 @@
       const res = await fetch(WIND_URL);
       const data = await res.json();
       _omData = data.daily;
-      // Only render if using Open-Meteo source
+      // Always save hourly for wind chart fallback
       if (_forecastSource === 'openmeteo') {
         renderOpenMeteoForecastWaterLevelBg(_omData);
         renderWind(data.hourly); // Save and render hourly
+      } else {
+        // For NWS and other sources, still render wind from Open-Meteo
+        renderWind(data.hourly);
       }
-      // Don't overwrite _hourlyData when using WeatherAPI source
     } catch (e) {
       console.error('Wind fetch failed:', e);
     }
