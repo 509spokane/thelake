@@ -1882,8 +1882,8 @@
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">` +
         row('🌡️', 'Temperature', `${im.temp}°F`) +
         row('💧', 'Humidity', `${obs.humidity}%`) +
-        row('<img src="images/windy_tent.png" style="width:24px;height:24px;object-fit:contain">', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
-        row('<img src="images/gusty_tent.png" style="width:24px;height:24px;object-fit:contain">', 'Gusts', `${im.windGust} mph`) +
+        row('<img src="images/windy_tent_t.png" style="width:30px;height:30px;object-fit:contain">', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
+        row('<img src="images/gusty_tent_t.png" style="width:30px;height:30px;object-fit:contain">', 'Gusts', `${im.windGust} mph`) +
         row('🌡️', 'Feels Like', `${im.heatIndex !== im.temp ? im.heatIndex : im.windChill}°F`) +
         row('💦', 'Dew Point', `${im.dewpt}°F`) +
         row('📊', 'Pressure', `${im.pressure} inHg`) +
