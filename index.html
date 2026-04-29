@@ -783,7 +783,7 @@
     const maxVal = Math.max(...slots.map(s => s.gust || 0), 1);
 
     // SVG dimensions — full width of container
-    const W = 900, H = 200, padL = 8, padR = 8, padT = 58, padB = 36;
+    const W = 900, H = 230, padL = 8, padR = 8, padT = 85, padB = 36;
     const n = slots.length;
     const xOf = i => padL + (i / (n - 1)) * (W - padL - padR);
     const yOf = v => padT + (1 - v / maxVal) * (H - padT - padB);
