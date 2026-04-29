@@ -315,14 +315,12 @@
 
 <div class="container">
   <header>
-    <div class="lake-name">Lake Roosevelt · Grand Coulee Dam</div>
+    <div class="lake-name">Lake Roosevelt</div>
     <h1>The <span>Lake</span></h1>
-    <div class="subtitle">Columbia River · Washington State</div>
   </header>
 
   <div class="status-bar">
-    <div class="status-dot loading" id="statusDot"></div>
-    <span id="statusText">Fetching data…</span>
+    <span id="statusText" style="font-size:10px;color:#4a7a96">Fetching data…</span>
   </div>
 
   <div id="summaryBar" style="margin-bottom:14px;padding:14px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(77,184,232,0.12);border-radius:14px;font-size:13px;line-height:1.8;color:#7ec8e3;display:none;overflow:hidden"></div>
@@ -1615,11 +1613,9 @@
       const peakDays = highsByDate.filter(d => d.high === maxHigh);
       let peakStr;
       if (peakDays.length > 1) {
-        peakStr = `${hl(maxHigh + '°')} on ${peakDays.map(d => hl(d.date)).join(' and ')}`;
-      } else if (top2.length === 2 && top2[0].high > top2[1].high) {
-        peakStr = `${hl(top2[0].high + '°')} on ${hl(top2[0].date)}, with ${hl(top2[1].high + '°')} on ${hl(top2[1].date)}`;
+        peakStr = `${hl(maxHigh + '°')} on ${hl(peakDays[0].date)}`;
       } else {
-        peakStr = `${hl(maxHigh + '°')} on ${hl(top2[0].date)}`;
+        peakStr = `${hl(maxHigh + '°')} on ${hl(highsByDate.find(d => d.high === maxHigh).date)}`;
       }
 
       // ── SVG curve chart: 10-day high temps ──
@@ -1749,7 +1745,8 @@
           wi = wj;
         }
 
-        const windSentence = `Wind averaging ${hl(avgWind + ' mph')} over the next 48 hours, with gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}.`;
+        const gustPart = maxGust > 10 ? `, gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}` : '';
+        const windSentence = `Wind averaging ${hl(avgWind + ' mph')}${gustPart}.`;
         const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
@@ -1786,22 +1783,22 @@
 
         let waterSentence;
         if (spread <= 0.5) {
-          waterSentence = `Lake level is steady, averaging around ${hl(avg + '\'')} over the coming days.`;
+          waterSentence = `Lake level steady around ${hl(avg + '\'')}.`;
         } else {
           const absChange = Math.abs(change);
           const mid = elevs[Math.floor(elevs.length / 2)];
           if (change > 0.5 && last > mid) {
-            waterSentence = `Lake level is forecasted to rise ${hl(absChange + '\'')} and continue rising through the period.`;
+            waterSentence = `Lake level rising ${hl(absChange + '\'')} and continuing up.`;
           } else if (change > 0.5) {
-            waterSentence = `Lake level is forecasted to rise ${hl(absChange + '\'')} over the coming days.`;
+            waterSentence = `Lake level rising ${hl(absChange + '\'')}.`;
           } else if (change < -0.5 && last < mid) {
-            waterSentence = `Lake level is forecasted to drop ${hl(absChange + '\'')} and continue dropping through the period.`;
+            waterSentence = `Lake level dropping ${hl(absChange + '\'')} and continuing down.`;
           } else if (change < -0.5) {
-            waterSentence = `Lake level is forecasted to drop ${hl(absChange + '\'')} over the coming days.`;
+            waterSentence = `Lake level dropping ${hl(absChange + '\'')}.`;
           } else if (change < 0) {
-            waterSentence = `Lake level is forecasted to drop slightly, averaging around ${hl(avg + '\'')} over the coming days.`;
+            waterSentence = `Lake level dropping slightly, around ${hl(avg + '\'')}.`;
           } else {
-            waterSentence = `Lake level is forecasted to rise slightly, averaging around ${hl(avg + '\'')} over the coming days.`;
+            waterSentence = `Lake level rising slightly, around ${hl(avg + '\'')}.`;
           }
         }
         // Mini water level SVG curve chart
@@ -1879,7 +1876,7 @@
       </div>`;
 
     el.innerHTML =
-      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">` +
+      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0 24px">` +
         row('🌡️', 'Temperature', `${im.temp}°F`) +
         row('💧', 'Humidity', `${obs.humidity}%`) +
         row('💨', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
