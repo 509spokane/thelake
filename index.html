@@ -1329,6 +1329,7 @@
 
       if (isToday) {
         col.style.borderColor = 'transparent';
+        col.dataset.today = 'true';
       }
 
       const dayStyle = isToday ? 'style="font-size:16px"' : '';
@@ -1349,6 +1350,12 @@
 
       grid.appendChild(col);
     });
+
+    // Scroll so today's column is the first visible column
+    const todayCol = grid.querySelector('[data-today="true"]');
+    if (todayCol) {
+      requestAnimationFrame(() => { grid.scrollLeft = todayCol.offsetLeft - 6; });
+    }
   }
 
   function mergeAndRenderWaterLevelBg() {
