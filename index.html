@@ -360,34 +360,63 @@
   </div>
 
   <div class="disclaimer">
-    Water level predictions subject to change without notice.<br>
-    Sources: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank">usbr.gov · Bureau of Reclamation</a>
-    &nbsp;·&nbsp;
-    <a class="source-link" href="https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046" target="_blank">weather.gov · NWS</a>
-    &nbsp;·&nbsp;
     <span id="fetchedAt"></span>
-    <br><br>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px">
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
-        <input type="checkbox" id="showHistoricWaterLevels" style="cursor:pointer;width:16px;height:16px" checked>
-        <span>Show historic water levels</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
-        <input type="checkbox" id="showWuSection" style="cursor:pointer;width:16px;height:16px" checked>
-        <span>Show current conditions (Two Rivers Marina)</span>
-      </label>
-      <div style="font-size:11px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.08em">Weather data source</div>
-      <div style="display:flex;gap:20px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-          <input type="radio" name="weatherSource" value="weatherapi" id="srcWeatherAPI" style="cursor:pointer">
-          <span>WeatherAPI</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-          <input type="radio" name="weatherSource" value="nws" id="srcNWS" checked style="cursor:pointer">
-          <span>NWS (weather.gov)</span>
-        </label>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
+
+      <!-- Forecast Source -->
+      <div>
+        <div style="font-size:10px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px">Forecast Source</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="radio" name="weatherSource" value="nws" id="srcNWS" checked style="cursor:pointer">
+            <span>NWS <span style="font-size:10px;color:#4a7a96">(weather.gov)</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="radio" name="weatherSource" value="weatherapi" id="srcWeatherAPI" style="cursor:pointer">
+            <span>WeatherAPI</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="radio" name="weatherSource" value="openmeteo" id="srcOpenMeteo" style="cursor:pointer">
+            <span>Open-Meteo</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="radio" name="weatherSource" value="openweather" id="srcOpenWeather" style="cursor:pointer">
+            <span>OpenWeather</span>
+          </label>
+        </div>
+        <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px;margin-top:6px"></div>
       </div>
-      <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px"></div>
+
+      <!-- Data Toggles -->
+      <div>
+        <div style="font-size:10px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px">Data Layers</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="checkbox" id="showWuSection" style="cursor:pointer;width:15px;height:15px" checked>
+            <span>Current conditions <span style="font-size:10px;color:#4a7a96">Weather Underground · KWADAVEN5</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="checkbox" id="showWindChart" style="cursor:pointer;width:15px;height:15px" checked>
+            <span>48-hour wind chart <span style="font-size:10px;color:#4a7a96">Open-Meteo</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
+            <input type="checkbox" id="showHistoricWaterLevels" style="cursor:pointer;width:15px;height:15px" checked>
+            <span>Historic water levels <span style="font-size:10px;color:#4a7a96">Bureau of Reclamation</span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div style="font-size:10px;color:#3a6a82;text-align:center;line-height:1.8">
+        Water level predictions subject to change without notice.<br>
+        <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank">usbr.gov · Bureau of Reclamation</a>
+        &nbsp;·&nbsp;
+        <a class="source-link" href="https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046" target="_blank">weather.gov · NWS</a>
+        &nbsp;·&nbsp;
+        <a class="source-link" href="https://open-meteo.com" target="_blank">open-meteo.com</a>
+        &nbsp;·&nbsp;
+        <a class="source-link" href="https://www.wunderground.com/dashboard/pws/KWADAVEN5" target="_blank">wunderground.com · KWADAVEN5</a>
+      </div>
     </div>
   </div>
 </div>
@@ -409,6 +438,12 @@
 
   // WeatherAPI only — no source switching
   // document.addEventListener('DOMContentLoaded', ...) — not needed
+
+  // Wind chart toggle
+  document.getElementById('showWindChart').addEventListener('change', (e) => {
+    const section = document.getElementById('windSection');
+    if (section) section.style.display = e.target.checked ? 'block' : 'none';
+  });
 
   // Historic water levels toggle
   document.getElementById('showHistoricWaterLevels').addEventListener('change', (e) => {
