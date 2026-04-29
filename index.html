@@ -1327,14 +1327,14 @@
         : '';
 
       const isToday = d === todayKey;
-      const todayLabel = isToday ? '<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;color:#fff;text-transform:uppercase;background:rgba(47,116,164,0.85);padding:2px 0 3px;margin:-12px -4px 6px;text-align:center">TODAY</div>' : '';
+      const todayLabel = isToday ? '<div style="position:absolute;top:-8px;right:-14px;font-size:10px;font-weight:900;letter-spacing:0.1em;color:#FFD700;text-transform:uppercase;z-index:10;transform:rotate(-15deg);text-shadow:0 2px 4px rgba(0,0,0,0.6);pointer-events:none;white-space:nowrap">TODAY</div>' : '';
 
       if (isToday) {
         col.style.borderColor = 'transparent';
       }
 
       col.innerHTML = `
-        <div class="wl-rows" style="${warmBg}">
+        <div class="wl-rows" style="${warmBg};position:relative">
           <div class="wl-r wl-r-day">
             ${todayLabel}
             <span class="wl-day">${dayNames[i]}</span>
