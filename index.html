@@ -1327,6 +1327,10 @@
       const isToday = d === todayKey;
       const todayLabel = isToday ? '<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;color:#fff;text-transform:uppercase;background:rgba(47,116,164,0.85);padding:2px 0 3px;margin:-12px -4px 6px;text-align:center">TODAY</div>' : '';
 
+      if (isToday) {
+        col.style.borderColor = 'transparent';
+      }
+
       col.innerHTML = `
         <div class="wl-rows" style="${warmBg}">
           <div class="wl-r wl-r-day">
