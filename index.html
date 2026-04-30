@@ -1547,17 +1547,15 @@
 
   // ── Inline source picker ──────────────────────────────────
   const SOURCE_OPTIONS = [
-    { value: 'nws',        label: 'NWS',        sub: 'weather.gov',       desc: 'High & low temps, precip chance, wind speed · 7-day' },
-    { value: 'weatherapi', label: 'WeatherAPI',  sub: 'weatherapi.com',    desc: 'High & low temps, hourly wind, precip · 10-day' },
-    { value: 'openmeteo',  label: 'Open-Meteo',  sub: 'open-meteo.com',    desc: 'High & low temps, hourly wind & gusts · 7-day' },
-    { value: 'openweather',label: 'OpenWeather', sub: 'openweathermap.org',desc: 'High & low temps, precip chance · 5-day' },
+    { value: 'nws',        label: 'NWS',        sub: '5-day',  desc: 'High & low temps, precip chance, wind speed' },
+    { value: 'weatherapi', label: 'WeatherAPI',  sub: '10-day', desc: 'High & low temps, hourly wind, precip' },
+    { value: 'openmeteo',  label: 'Open-Meteo',  sub: '10-day', desc: 'High & low temps, hourly wind & gusts' },
   ];
 
   const SOURCE_LABELS = {
-    nws:         'NWS · weather.gov',
-    weatherapi:  'WeatherAPI',
-    openmeteo:   'Open-Meteo',
-    openweather: 'OpenWeather',
+    nws:        'NWS · weather.gov',
+    weatherapi: 'WeatherAPI',
+    openmeteo:  'Open-Meteo',
   };
 
   function buildSourcePicker(pickerId) {
