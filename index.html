@@ -127,6 +127,31 @@
       color: #5a9ec0;
       margin-bottom: 18px;
     }
+    .section-source-bar {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(77,184,232,0.08);
+      font-size: 10px;
+      color: #3a6a82;
+      text-align: right;
+    }
+    .source-change-link {
+      color: #5a9ec0;
+      text-decoration: none;
+      font-size: 10px;
+    }
+    .source-change-link:hover { color: #7ec8e3; text-decoration: underline; }
+    .inline-source-picker {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      justify-content: flex-end;
+    }
+    .inline-source-picker label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: #7ec8e3; cursor: pointer;
+    }
 
     /* ── Combined daily forecast — row-based ── */
     .combined-scroll {
@@ -323,7 +348,15 @@
     <span id="statusText" style="font-size:10px;color:#4a7a96">Fetching data…</span>
   </div>
 
-  <div id="summaryBar" style="margin-bottom:14px;padding:14px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(77,184,232,0.12);border-radius:14px;font-size:13px;line-height:1.8;color:#7ec8e3;display:none;overflow:hidden"></div>
+  <div class="card" id="summarySection" style="display:none;margin-bottom:14px">
+    <div class="section-label">Conditions Summary</div>
+    <div id="summaryBar" style="font-size:13px;line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
+    <div class="section-source-bar">
+      Source: <span id="summarySourceLabel">NWS · weather.gov</span>
+      &nbsp;·&nbsp;<a href="#" class="source-change-link" onclick="toggleSourcePicker('summaryPicker');return false">Change</a>
+      <div id="summaryPicker" class="inline-source-picker" style="display:none"></div>
+    </div>
+  </div>
 
   <div class="elev-compact" style="display:none">
     <div class="elev-compact-label">Current Elevation</div>
@@ -338,54 +371,37 @@
         <div style="color:#4a7a96;font-size:13px;padding:12px">Loading…</div>
       </div>
     </div>
+    <div class="section-source-bar">
+      Source: <span id="forecastSourceLabel">NWS · weather.gov</span>
+      &nbsp;·&nbsp;<a href="#" class="source-change-link" onclick="toggleSourcePicker('forecastPicker');return false">Change</a>
+      <div id="forecastPicker" class="inline-source-picker" style="display:none"></div>
+    </div>
   </div>
 
   <div class="card" id="windSection">
-    <div style="margin-bottom:18px">
-      <div class="section-label" style="margin-bottom:0">Wind · Next 48 Hours</div>
-    </div>
+    <div class="section-label">Wind · Next 48 Hours</div>
     <div class="wind-scroll">
       <div class="wind-chart" id="windChart">
         <div style="color:#4a7a96;font-size:13px;padding:12px">Loading…</div>
       </div>
     </div>
+    <div class="section-source-bar">
+      Source: <a class="source-link" href="https://open-meteo.com" target="_blank">Open-Meteo</a>
+    </div>
   </div>
 
   <div class="card" id="wuSection" style="display:none">
-    <div class="section-label" style="margin-bottom:16px">Current Conditions · Two Rivers Marina</div>
+    <div class="section-label">Current Conditions · Two Rivers Marina</div>
     <div id="wuContent" style="color:#4a7a96;font-size:13px">Loading…</div>
-    <div style="margin-top:12px;font-size:10px;color:#3a6a82;text-align:right">
+    <div class="section-source-bar">
       Source: <a class="source-link" href="https://www.wunderground.com/dashboard/pws/KWADAVEN5" target="_blank">Weather Underground · KWADAVEN5</a>
     </div>
   </div>
 
   <div class="disclaimer">
     <span id="fetchedAt"></span>
+    <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px;margin-top:4px"></div>
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
-
-      <!-- Forecast Source -->
-      <div>
-        <div style="font-size:10px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px">Forecast Source</div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:center">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="radio" name="weatherSource" value="nws" id="srcNWS" checked style="cursor:pointer">
-            <span>NWS <span style="font-size:10px;color:#4a7a96">(weather.gov)</span></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="radio" name="weatherSource" value="weatherapi" id="srcWeatherAPI" style="cursor:pointer">
-            <span>WeatherAPI</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="radio" name="weatherSource" value="openmeteo" id="srcOpenMeteo" style="cursor:pointer">
-            <span>Open-Meteo</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="radio" name="weatherSource" value="openweather" id="srcOpenWeather" style="cursor:pointer">
-            <span>OpenWeather</span>
-          </label>
-        </div>
-        <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px;margin-top:6px"></div>
-      </div>
 
       <!-- Data Toggles -->
       <div>
@@ -1587,25 +1603,68 @@
     }
   }
 
-  // ── Weather source toggle ──────────────────────────────────
-  document.querySelectorAll('input[name="weatherSource"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      _forecastSource = e.target.value;
-      handleSourceChange(); // Re-render 10-day forecast
+  // ── Inline source picker ──────────────────────────────────
+  const SOURCE_OPTIONS = [
+    { value: 'nws',        label: 'NWS',        sub: 'weather.gov' },
+    { value: 'weatherapi', label: 'WeatherAPI',  sub: null },
+    { value: 'openmeteo',  label: 'Open-Meteo',  sub: null },
+    { value: 'openweather',label: 'OpenWeather', sub: null },
+  ];
 
-      if (_forecastSource === 'nws') {
-        if (_nwsHourlyData) {
-          renderWind(_nwsHourlyData);
-        } else {
-          fetchNWSHourly(); // Lazy-load NWS hourly data on first switch
-        }
-      } else if (_forecastSource === 'weatherapi') {
-        const statusEl = document.getElementById('sourceStatus');
-        if (statusEl) statusEl.textContent = '';
-        if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
-      }
+  const SOURCE_LABELS = {
+    nws:         'NWS · weather.gov',
+    weatherapi:  'WeatherAPI',
+    openmeteo:   'Open-Meteo',
+    openweather: 'OpenWeather',
+  };
+
+  function buildSourcePicker(pickerId) {
+    const el = document.getElementById(pickerId);
+    if (!el || el.dataset.built) return;
+    el.dataset.built = '1';
+    el.innerHTML = SOURCE_OPTIONS.map(o =>
+      `<label><input type="radio" name="${pickerId}" value="${o.value}"${o.value === _forecastSource ? ' checked' : ''}>
+        ${o.label}${o.sub ? ` <span style="font-size:9px;color:#4a7a96">(${o.sub})</span>` : ''}</label>`
+    ).join('');
+    el.querySelectorAll('input').forEach(r => r.addEventListener('change', e => onSourceChange(e.target.value)));
+  }
+
+  function toggleSourcePicker(pickerId) {
+    buildSourcePicker(pickerId);
+    const el = document.getElementById(pickerId);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+    // Sync checked state
+    if (el.style.display !== 'none') {
+      const r = el.querySelector(`input[value="${_forecastSource}"]`);
+      if (r) r.checked = true;
+    }
+  }
+
+  function updateSourceLabels() {
+    const lbl = SOURCE_LABELS[_forecastSource] || _forecastSource;
+    ['summarySourceLabel','forecastSourceLabel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = lbl;
     });
-  });
+  }
+
+  function onSourceChange(val) {
+    _forecastSource = val;
+    updateSourceLabels();
+    // Close all pickers
+    document.querySelectorAll('.inline-source-picker').forEach(p => p.style.display = 'none');
+    handleSourceChange();
+    if (_forecastSource === 'nws') {
+      if (_nwsHourlyData) renderWind(_nwsHourlyData);
+      else fetchNWSHourly();
+    } else if (_forecastSource === 'weatherapi') {
+      const statusEl = document.getElementById('sourceStatus');
+      if (statusEl) statusEl.textContent = '';
+      if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
+    }
+    renderSummary();
+  }
 
   // ── Summary Bar ───────────────────────────────────────────
   function renderSummary() {
@@ -1896,9 +1955,10 @@
     }
 
     if (blocks.length) {
-      const heading = `<div style="text-align:center;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(77,184,232,0.5);margin-bottom:10px;padding:0 18px">Summary</div>`;
-      el.innerHTML = heading + blocks.join('');
-      el.style.display = 'block';
+      el.innerHTML = blocks.join('');
+      const section = document.getElementById('summarySection');
+      if (section) section.style.display = 'block';
+      updateSourceLabels();
     }
   }
 
