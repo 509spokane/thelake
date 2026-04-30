@@ -340,13 +340,10 @@
 
 <div class="container">
   <header>
-    <div class="lake-name">Lake Roosevelt</div>
     <h1>The <span>Lake</span></h1>
+    <div class="lake-name" style="font-size:10px;margin-top:4px">Lake Roosevelt</div>
   </header>
-
-  <div class="status-bar">
-    <span id="statusText" style="font-size:10px;color:#4a7a96">Fetching data…</span>
-  </div>
+  <div id="statusText" style="display:none"></div>
 
   <div class="card" id="summarySection" style="display:none;margin-bottom:14px">
     <div class="section-label">Conditions Summary</div>
@@ -403,25 +400,6 @@
     <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px;margin-top:4px"></div>
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
 
-      <!-- Data Toggles -->
-      <div>
-        <div style="font-size:10px;color:#5a9ec0;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px">Data Layers</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="checkbox" id="showWuSection" style="cursor:pointer;width:15px;height:15px" checked>
-            <span>Current conditions <span style="font-size:10px;color:#4a7a96">Weather Underground · KWADAVEN5</span></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="checkbox" id="showWindChart" style="cursor:pointer;width:15px;height:15px" checked>
-            <span>48-hour wind chart <span style="font-size:10px;color:#4a7a96">Open-Meteo</span></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7ec8e3;cursor:pointer">
-            <input type="checkbox" id="showHistoricWaterLevels" style="cursor:pointer;width:15px;height:15px" checked>
-            <span>Historic water levels <span style="font-size:10px;color:#4a7a96">Bureau of Reclamation</span></span>
-          </label>
-        </div>
-      </div>
-
       <!-- Sources -->
       <div style="font-size:10px;color:#3a6a82;text-align:center;line-height:1.8">
         Water level predictions subject to change without notice.<br>
@@ -452,31 +430,6 @@
   const WUNDERGROUND_KEY = '442d6039082a4860ad6039082a1860c0';
   const WUNDERGROUND_STATION = 'KWADAVEN5';
 
-  // WeatherAPI only — no source switching
-  // document.addEventListener('DOMContentLoaded', ...) — not needed
-
-  // Wind chart toggle
-  document.getElementById('showWindChart').addEventListener('change', (e) => {
-    const section = document.getElementById('windSection');
-    if (section) section.style.display = e.target.checked ? 'block' : 'none';
-  });
-
-  // Historic water levels toggle
-  document.getElementById('showHistoricWaterLevels').addEventListener('change', (e) => {
-    _showHistoricWaterLevels = e.target.checked;
-    mergeAndRenderWaterLevelBg();
-  });
-
-  // Current conditions (WU) toggle
-  document.getElementById('showWuSection').addEventListener('change', (e) => {
-    const section = document.getElementById('wuSection');
-    if (e.target.checked) {
-      section.style.display = 'block';
-      fetchWunderground();
-    } else {
-      section.style.display = 'none';
-    }
-  });
 
   function showSourceUnavailable(msg) {
     const grid = document.getElementById('waterLevelGrid');
@@ -1605,10 +1558,10 @@
 
   // ── Inline source picker ──────────────────────────────────
   const SOURCE_OPTIONS = [
-    { value: 'nws',        label: 'NWS',        sub: 'weather.gov' },
-    { value: 'weatherapi', label: 'WeatherAPI',  sub: null },
-    { value: 'openmeteo',  label: 'Open-Meteo',  sub: null },
-    { value: 'openweather',label: 'OpenWeather', sub: null },
+    { value: 'nws',        label: 'NWS',         sub: 'weather.gov',      desc: 'Official US government forecast, 7-day' },
+    { value: 'weatherapi', label: 'WeatherAPI',   sub: 'weatherapi.com',   desc: '10-day forecast with hourly detail' },
+    { value: 'openmeteo',  label: 'Open-Meteo',   sub: 'open-meteo.com',   desc: 'Free open-source model, 7-day' },
+    { value: 'openweather',label: 'OpenWeather',  sub: 'openweathermap.org',desc: '5-day forecast, community data' },
   ];
 
   const SOURCE_LABELS = {
@@ -1623,8 +1576,14 @@
     if (!el || el.dataset.built) return;
     el.dataset.built = '1';
     el.innerHTML = SOURCE_OPTIONS.map(o =>
-      `<label><input type="radio" name="${pickerId}" value="${o.value}"${o.value === _forecastSource ? ' checked' : ''}>
-        ${o.label}${o.sub ? ` <span style="font-size:9px;color:#4a7a96">(${o.sub})</span>` : ''}</label>`
+      `<label style="flex-direction:column;align-items:flex-start;gap:1px">
+        <span style="display:flex;align-items:center;gap:5px">
+          <input type="radio" name="${pickerId}" value="${o.value}"${o.value === _forecastSource ? ' checked' : ''}>
+          <strong style="color:#e8f4ff">${o.label}</strong>
+          ${o.sub ? `<span style="font-size:9px;color:#4a7a96">${o.sub}</span>` : ''}
+        </span>
+        <span style="font-size:9px;color:#4a7a96;padding-left:18px">${o.desc}</span>
+      </label>`
     ).join('');
     el.querySelectorAll('input').forEach(r => r.addEventListener('change', e => onSourceChange(e.target.value)));
   }
