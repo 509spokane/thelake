@@ -400,17 +400,6 @@
     <div id="sourceStatus" style="font-size:11px;color:#5a9ec0;min-height:16px;margin-top:4px"></div>
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
 
-      <!-- Sources -->
-      <div style="font-size:10px;color:#3a6a82;text-align:center;line-height:1.8">
-        Water level predictions subject to change without notice.<br>
-        <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank">usbr.gov · Bureau of Reclamation</a>
-        &nbsp;·&nbsp;
-        <a class="source-link" href="https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046" target="_blank">weather.gov · NWS</a>
-        &nbsp;·&nbsp;
-        <a class="source-link" href="https://open-meteo.com" target="_blank">open-meteo.com</a>
-        &nbsp;·&nbsp;
-        <a class="source-link" href="https://www.wunderground.com/dashboard/pws/KWADAVEN5" target="_blank">wunderground.com · KWADAVEN5</a>
-      </div>
     </div>
   </div>
 </div>
@@ -1558,10 +1547,10 @@
 
   // ── Inline source picker ──────────────────────────────────
   const SOURCE_OPTIONS = [
-    { value: 'nws',        label: 'NWS',         sub: 'weather.gov',      desc: 'Official US government forecast, 7-day' },
-    { value: 'weatherapi', label: 'WeatherAPI',   sub: 'weatherapi.com',   desc: '10-day forecast with hourly detail' },
-    { value: 'openmeteo',  label: 'Open-Meteo',   sub: 'open-meteo.com',   desc: 'Free open-source model, 7-day' },
-    { value: 'openweather',label: 'OpenWeather',  sub: 'openweathermap.org',desc: '5-day forecast, community data' },
+    { value: 'nws',        label: 'NWS',        sub: 'weather.gov',       desc: 'High & low temps, precip chance, wind speed · 7-day' },
+    { value: 'weatherapi', label: 'WeatherAPI',  sub: 'weatherapi.com',    desc: 'High & low temps, hourly wind, precip · 10-day' },
+    { value: 'openmeteo',  label: 'Open-Meteo',  sub: 'open-meteo.com',    desc: 'High & low temps, hourly wind & gusts · 7-day' },
+    { value: 'openweather',label: 'OpenWeather', sub: 'openweathermap.org',desc: 'High & low temps, precip chance · 5-day' },
   ];
 
   const SOURCE_LABELS = {
