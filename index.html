@@ -349,9 +349,7 @@
     <div class="section-label">Conditions Summary</div>
     <div id="summaryBar" style="font-size:13px;line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
     <div class="section-source-bar">
-      Source: <span id="summarySourceLabel">NWS · weather.gov</span>
-      &nbsp;·&nbsp;<a href="#" class="source-change-link" onclick="toggleSourcePicker('summaryPicker');return false">Change</a>
-      <div id="summaryPicker" class="inline-source-picker" style="display:none"></div>
+      Source: <span id="summarySourceLabel">weather.gov</span>
     </div>
   </div>
 
@@ -383,7 +381,7 @@
       </div>
     </div>
     <div class="section-source-bar">
-      Source: <a class="source-link" href="https://open-meteo.com" target="_blank">Open-Meteo</a>
+      Source: <span id="windSourceLabel">open-meteo.com</span>
     </div>
   </div>
 
@@ -1547,29 +1545,37 @@
 
   // ── Inline source picker ──────────────────────────────────
   const SOURCE_OPTIONS = [
-    { value: 'nws',        label: 'NWS',        sub: '5-day',  desc: 'High & low temps, precip chance, wind speed' },
-    { value: 'weatherapi', label: 'WeatherAPI',  sub: '10-day', desc: 'High & low temps, hourly wind, precip' },
-    { value: 'openmeteo',  label: 'Open-Meteo',  sub: '10-day', desc: 'High & low temps, hourly wind & gusts' },
+    { value: 'nws',        label: 'weather.gov',        desc: 'High & low temps, precip chance, wind speed · 5-day' },
+    { value: 'weatherapi', label: 'weatherapi.com',      desc: 'High & low temps, hourly wind, precip · 10-day' },
+    { value: 'openmeteo',  label: 'open-meteo.com',      desc: 'High & low temps, hourly wind & gusts · 10-day' },
   ];
 
   const SOURCE_LABELS = {
-    nws:        'NWS · weather.gov',
-    weatherapi: 'WeatherAPI',
-    openmeteo:  'Open-Meteo',
+    nws:        'weather.gov',
+    weatherapi: 'weatherapi.com',
+    openmeteo:  'open-meteo.com',
+  };
+
+  const WIND_SOURCE_LABELS = {
+    nws:        'weather.gov',
+    weatherapi: 'weatherapi.com',
+    openmeteo:  'open-meteo.com',
   };
 
   function buildSourcePicker(pickerId) {
     const el = document.getElementById(pickerId);
     if (!el || el.dataset.built) return;
     el.dataset.built = '1';
+    el.style.flexDirection = 'column';
+    el.style.alignItems = 'flex-end';
+    el.style.gap = '8px';
     el.innerHTML = SOURCE_OPTIONS.map(o =>
-      `<label style="flex-direction:column;align-items:flex-start;gap:1px">
-        <span style="display:flex;align-items:center;gap:5px">
+      `<label style="flex-direction:column;align-items:flex-end;gap:2px;text-align:right">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:#e8f4ff">${o.label}</span>
           <input type="radio" name="${pickerId}" value="${o.value}"${o.value === _forecastSource ? ' checked' : ''}>
-          <strong style="color:#e8f4ff">${o.label}</strong>
-          ${o.sub ? `<span style="font-size:9px;color:#4a7a96">${o.sub}</span>` : ''}
         </span>
-        <span style="font-size:9px;color:#4a7a96;padding-left:18px">${o.desc}</span>
+        <span style="font-size:9px;color:#4a7a96">${o.desc}</span>
       </label>`
     ).join('');
     el.querySelectorAll('input').forEach(r => r.addEventListener('change', e => onSourceChange(e.target.value)));
@@ -1593,6 +1599,8 @@
       const el = document.getElementById(id);
       if (el) el.textContent = lbl;
     });
+    const windEl = document.getElementById('windSourceLabel');
+    if (windEl) windEl.textContent = WIND_SOURCE_LABELS[_forecastSource] || 'open-meteo.com';
   }
 
   function onSourceChange(val) {
