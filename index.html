@@ -473,16 +473,24 @@
 
 
   // ── Font size setting ─────────────────────────────────────
+  let _svgScale = 1;
   function setFontSize(scale) {
     document.body.dataset.font = scale === 'normal' ? '' : scale;
+    _svgScale = scale === 'xl' ? 2.0 : scale === 'lg' ? 1.5 : 1;
     localStorage.setItem('fontScale', scale);
     document.querySelectorAll('.font-size-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.scale === scale);
     });
+    renderSummary();
   }
   (function initFontSize() {
     const saved = localStorage.getItem('fontScale') || 'normal';
-    setFontSize(saved);
+    _svgScale = saved === 'xl' ? 2.0 : saved === 'lg' ? 1.5 : 1;
+    document.body.dataset.font = saved === 'normal' ? '' : saved;
+    document.querySelectorAll('.font-size-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.scale === saved);
+    });
+    localStorage.setItem('fontScale', saved);
   })();
 
   function showSourceUnavailable(msg) {
@@ -1782,9 +1790,10 @@
         const dotColor = warm ? 'rgba(210,90,20,0.95)' : 'rgba(180,160,60,0.8)';
         const labelColor = warm ? 'rgba(220,130,60,1)' : 'rgba(160,180,200,0.75)';
         const dayShort = d.date.split(' ')[0];
+        const fs = Math.round(8 * _svgScale);
         return `<circle cx="${x}" cy="${y}" r="3" fill="${dotColor}"/>` +
-               `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="8" font-weight="600" fill="${labelColor}" font-family="sans-serif">${d.high}°</text>` +
-               `<text x="${x}" y="${svgH - 4}" text-anchor="middle" font-size="8" fill="${labelColor}" font-family="sans-serif">${dayShort}</text>`;
+               `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${labelColor}" font-family="sans-serif">${d.high}°</text>` +
+               `<text x="${x}" y="${svgH - 4}" text-anchor="middle" font-size="${fs}" fill="${labelColor}" font-family="sans-serif">${dayShort}</text>`;
       }).join('');
 
       const tempSentence = `Average high ${hl(avgHigh + '°')}, peaking at ${peakStr}.`;
@@ -1862,7 +1871,7 @@
           const nextX = bi + 1 < dayBounds.length ? dayBounds[bi + 1].x : wsvgW - wpadR;
           const cx = (b.x + nextX) / 2;
           const label = `${fmtDay(b.t)} ${b.t.getMonth()+1}/${b.t.getDate()}`;
-          dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="8" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
+          dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="${Math.round(8 * _svgScale)}" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
         });
 
         // Orange dots + label (time on top, mph + emoji below) centered over each windy run
@@ -1883,8 +1892,8 @@
           const timeLabel = run.length === 1
             ? fmtHr(run[0].t)
             : `${fmtHr(run[0].t)}–${fmtHr(run[run.length-1].t)}`;
-          windyDots += `<text x="${cx}" y="${peakY - 16}" text-anchor="middle" font-size="7.5" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
-          windyDots += `<text x="${cx}" y="${peakY - 6}" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
+          windyDots += `<text x="${cx}" y="${peakY - 16}" text-anchor="middle" font-size="${Math.round(7.5 * _svgScale)}" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
+          windyDots += `<text x="${cx}" y="${peakY - 6}" text-anchor="middle" font-size="${Math.round(8 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
           wi = wj;
         }
 
@@ -1977,10 +1986,10 @@
           const labelColor = isToday ? 'rgba(255,255,255,0.9)' : 'rgba(120,180,220,0.55)';
           const labelWeight = isToday ? '700' : '400';
           // Today: show elevation above dot
-          const elevLabel = isToday ? `<text x="${x}" y="${y - 7}" text-anchor="middle" font-size="8" font-weight="700" fill="rgba(255,255,255,0.85)" font-family="sans-serif">${v}'</text>` : '';
+          const elevLabel = isToday ? `<text x="${x}" y="${y - 7}" text-anchor="middle" font-size="${Math.round(8 * _svgScale)}" font-weight="700" fill="rgba(255,255,255,0.85)" font-family="sans-serif">${v}'</text>` : '';
           return `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotColor}"/>` +
                  elevLabel +
-                 `<text x="${x}" y="${wlH - 4}" text-anchor="middle" font-size="8" font-weight="${labelWeight}" fill="${labelColor}" font-family="sans-serif">${isToday ? 'Today' : dayPart}</text>`;
+                 `<text x="${x}" y="${wlH - 4}" text-anchor="middle" font-size="${Math.round(8 * _svgScale)}" font-weight="${labelWeight}" fill="${labelColor}" font-family="sans-serif">${isToday ? 'Today' : dayPart}</text>`;
         }).join('');
 
         const wlChart = `<svg viewBox="0 0 ${wlW} ${wlH}" width="100%" height="${wlH}" style="display:block;overflow:visible">` +
