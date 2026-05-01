@@ -1250,7 +1250,8 @@
         if (!dates.includes(key)) {
           const dayName = d.toLocaleDateString([], {weekday:'short'});
           const idx = _lakeDays.dates.indexOf(key);
-          histCols.push({ date: key, dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1), elev: idx >= 0 ? _lakeDays.elevs[idx] : null, hist: true });
+          const elev = idx >= 0 ? _lakeDays.elevs[idx] : null;
+          if (elev !== null) histCols.push({ date: key, dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1), elev, hist: true });
         }
       }
     }
