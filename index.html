@@ -376,7 +376,7 @@
   <header>
     <h1>The <span>Lake</span></h1>
     <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Two Rivers &bull; Lake Roosevelt &bull; Fort Spokane</div>
-    <div id="headerStats" style="margin-top:8px;font-size:calc(13px * var(--fs));color:#7ec8e3;line-height:2;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px"></div>
+    <div style="margin-top:6px;font-size:calc(11px * var(--fs));color:#4a7a96;letter-spacing:0.08em">Weather, Wind, &amp; Water Level Info</div>
   </header>
   <div id="statusText" style="display:none"></div>
 
@@ -436,9 +436,8 @@
     </div>
 
     <div class="font-size-picker">
-      <div class="font-size-picker-label">Text Size</div>
       <select class="font-size-select" id="fontSizeSelect" onchange="setFontSize(this.value)">
-        <option value="normal">Normal</option>
+        <option value="normal">Normal Text Size</option>
         <option value="lg">I forgot my readers</option>
         <option value="xl">I have my readers and still can't read anything</option>
       </select>
