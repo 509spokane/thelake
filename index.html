@@ -327,6 +327,51 @@
       line-height: 1.7;
     }
     a.source-link { color: #4db8e8; text-decoration: none; opacity: 0.7; }
+
+    /* Font size scaling */
+    body[data-font="lg"]  .container { zoom: 1.25; }
+    body[data-font="xl"]  .container { zoom: 1.5;  }
+
+    .font-size-picker {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(77,184,232,0.10);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .font-size-picker-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #3a6a88;
+    }
+    .font-size-options {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+      max-width: 340px;
+    }
+    .font-size-btn {
+      background: none;
+      border: 1px solid rgba(77,184,232,0.15);
+      border-radius: 8px;
+      color: #5a8aaa;
+      font-size: 11px;
+      padding: 7px 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .font-size-btn:hover { border-color: rgba(77,184,232,0.35); color: #7ec8e3; }
+    .font-size-btn.active {
+      background: rgba(77,184,232,0.10);
+      border-color: rgba(77,184,232,0.45);
+      color: #c8e8f8;
+    }
     a.source-link:hover { opacity: 1; }
   </style>
 </head>
@@ -399,6 +444,15 @@
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
 
     </div>
+
+    <div class="font-size-picker">
+      <div class="font-size-picker-label">Text Size</div>
+      <div class="font-size-options">
+        <button class="font-size-btn active" data-scale="normal" onclick="setFontSize('normal')">Normal</button>
+        <button class="font-size-btn" data-scale="lg" onclick="setFontSize('lg')">I forgot my readers</button>
+        <button class="font-size-btn" data-scale="xl" onclick="setFontSize('xl')">I have my readers and still can't see anything</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -417,6 +471,19 @@
   const WUNDERGROUND_KEY = '442d6039082a4860ad6039082a1860c0';
   const WUNDERGROUND_STATION = 'KWADAVEN5';
 
+
+  // ── Font size setting ─────────────────────────────────────
+  function setFontSize(scale) {
+    document.body.dataset.font = scale === 'normal' ? '' : scale;
+    localStorage.setItem('fontScale', scale);
+    document.querySelectorAll('.font-size-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.scale === scale);
+    });
+  }
+  (function initFontSize() {
+    const saved = localStorage.getItem('fontScale') || 'normal';
+    setFontSize(saved);
+  })();
 
   function showSourceUnavailable(msg) {
     const grid = document.getElementById('waterLevelGrid');
