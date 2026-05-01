@@ -1644,6 +1644,17 @@
         const dt = new Date(+_y, +_m - 1, +_dd);
         highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: Math.round(d.day.maxtemp_f) });
       });
+    } else if (_forecastSource === 'openmeteo' && _omData) {
+      const todayStr = today.toISOString().slice(0, 10);
+      _omData.time.forEach((dateStr, i) => {
+        if (dateStr < todayStr) return;
+        const [_y, _m, _dd] = dateStr.split('-');
+        const dt = new Date(+_y, +_m - 1, +_dd);
+        const highC = _omData.temperature_2m_max[i];
+        if (highC == null) return;
+        const highF = Math.round(highC * 9/5 + 32);
+        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: highF });
+      });
     } else if (_wxDayMap) {
       for (let i = 0; i < 10; i++) {
         const d = new Date(today); d.setDate(today.getDate() + i);
