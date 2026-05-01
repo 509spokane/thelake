@@ -607,10 +607,19 @@
   }
 
   function extractForecastDates(all) {
-    for (let i = 0; i <= all.length - 10; i++) {
-      const run = all.slice(i, i + 10);
-      if (isConsecutiveDates(run)) return run;
+    // Find the longest consecutive run (up to 14 days) to capture historical + forecast dates
+    let best = [];
+    for (let i = 0; i < all.length; i++) {
+      for (let len = 14; len >= 10; len--) {
+        if (i + len > all.length) continue;
+        const run = all.slice(i, i + len);
+        if (isConsecutiveDates(run)) {
+          if (run.length > best.length) best = run;
+          break;
+        }
+      }
     }
+    if (best.length >= 10) return best;
     const seen = new Set(), unique = [];
     for (const d of all) {
       if (!seen.has(d)) { seen.add(d); unique.push(d); }
