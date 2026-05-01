@@ -338,41 +338,29 @@
       padding-top: 16px;
       border-top: 1px solid rgba(77,184,232,0.10);
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 10px;
     }
     .font-size-picker-label {
-      font-size: 10px;
+      font-size: calc(10px * var(--fs));
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: #3a6a88;
+      white-space: nowrap;
     }
-    .font-size-options {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      width: 100%;
-      max-width: 340px;
-    }
-    .font-size-btn {
-      background: none;
-      border: 1px solid rgba(77,184,232,0.15);
+    .font-size-select {
+      background: rgba(10,22,40,0.7);
+      border: 1px solid rgba(77,184,232,0.25);
       border-radius: 8px;
-      color: #5a8aaa;
+      color: #7ec8e3;
       font-size: calc(11px * var(--fs));
-      padding: 7px 14px;
+      padding: 6px 10px;
       cursor: pointer;
-      text-align: left;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
       font-family: inherit;
+      outline: none;
     }
-    .font-size-btn:hover { border-color: rgba(77,184,232,0.35); color: #7ec8e3; }
-    .font-size-btn.active {
-      background: rgba(77,184,232,0.10);
-      border-color: rgba(77,184,232,0.45);
-      color: #c8e8f8;
-    }
+    .font-size-select:focus { border-color: rgba(77,184,232,0.5); }
     a.source-link:hover { opacity: 1; }
   </style>
 </head>
@@ -388,6 +376,7 @@
   <header>
     <h1>The <span>Lake</span></h1>
     <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Two Rivers &bull; Lake Roosevelt &bull; Fort Spokane</div>
+    <div id="headerStats" style="margin-top:8px;font-size:calc(13px * var(--fs));color:#7ec8e3;line-height:2;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px"></div>
   </header>
   <div id="statusText" style="display:none"></div>
 
@@ -448,18 +437,18 @@
 
     <div class="font-size-picker">
       <div class="font-size-picker-label">Text Size</div>
-      <div class="font-size-options">
-        <button class="font-size-btn active" data-scale="normal" onclick="setFontSize('normal')">Normal</button>
-        <button class="font-size-btn" data-scale="lg" onclick="setFontSize('lg')">I forgot my readers</button>
-        <button class="font-size-btn" data-scale="xl" onclick="setFontSize('xl')">I have my readers and still can't see anything</button>
-      </div>
+      <select class="font-size-select" id="fontSizeSelect" onchange="setFontSize(this.value)">
+        <option value="normal">Normal</option>
+        <option value="lg">I forgot my readers</option>
+        <option value="xl">I have my readers and still can't read anything</option>
+      </select>
     </div>
   </div>
 </div>
 
 <script>
   // ── Data source toggle ─────────────────────────────────────
-  let _forecastSource = 'nws'; // 'nws', 'openmeteo', 'weatherapi', 'openweather'
+  let _forecastSource = 'weatherapi'; // 'nws', 'openmeteo', 'weatherapi', 'openweather'
   let _weatherAPIData = null;
   let _openWeatherData = null;
   let _showHistoricWaterLevels = true;
@@ -479,19 +468,20 @@
     document.body.dataset.font = scale === 'normal' ? '' : scale;
     _svgScale = scale === 'xl' ? 2.0 : scale === 'lg' ? 1.5 : 1;
     localStorage.setItem('fontScale', scale);
-    document.querySelectorAll('.font-size-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.scale === scale);
-    });
+    const sel = document.getElementById('fontSizeSelect');
+    if (sel) sel.value = scale;
     renderSummary();
   }
   (function initFontSize() {
     const saved = localStorage.getItem('fontScale') || 'normal';
     _svgScale = saved === 'xl' ? 2.0 : saved === 'lg' ? 1.5 : 1;
     document.body.dataset.font = saved === 'normal' ? '' : saved;
-    document.querySelectorAll('.font-size-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.scale === saved);
-    });
     localStorage.setItem('fontScale', saved);
+    // Sync dropdown after DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('fontSizeSelect');
+      if (sel) sel.value = saved;
+    }, { once: true });
   })();
 
   function showSourceUnavailable(msg) {
@@ -667,6 +657,7 @@
     const elevs    = allElevs.slice(0, dates.length);
 
     _lakeDays = { dates, elevs };
+    updateHeaderStats();
 
     document.getElementById('statusDot').className = 'status-dot';
     document.getElementById('statusText').textContent = 'Live data · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2014,8 +2005,32 @@
     }
   }
 
+  // ── Header quick-stats ────────────────────────────────────
+  let _headerWu = null;   // latest WU obs
+  function updateHeaderStats() {
+    const el = document.getElementById('headerStats');
+    if (!el) return;
+    const parts = [];
+    if (_headerWu) {
+      const im = _headerWu.imperial;
+      const dir = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(_headerWu.winddir / 22.5) % 16];
+      parts.push(`🌡️ <strong style="color:#e8f4ff">${im.temp}°F</strong>`);
+      if (im.windSpeed > 0)
+        parts.push(`💨 <strong style="color:#e8f4ff">${im.windSpeed} mph ${dir}</strong>${im.windGust > im.windSpeed ? ` <span style="color:rgba(240,180,80,0.85);font-size:calc(11px * var(--fs))">gusts ${im.windGust}</span>` : ''}`);
+    }
+    if (_lakeDays && _lakeDays.elevs && _lakeDays.elevs.length) {
+      const todayKey = (() => { const t = new Date(); return `${t.getMonth()+1}/${t.getDate()}`; })();
+      const idx = _lakeDays.dates.indexOf(todayKey);
+      const elev = idx >= 0 ? _lakeDays.elevs[idx] : _lakeDays.elevs[0];
+      parts.push(`💧 <strong style="color:#e8f4ff">${elev.toFixed(1)} ft</strong>`);
+    }
+    el.innerHTML = parts.join('<span style="color:rgba(77,184,232,0.3)"> · </span>');
+  }
+
   // ── Weather Underground PWS ───────────────────────────────
   function renderWuData(obs) {
+    _headerWu = obs;
+    updateHeaderStats();
     const el = document.getElementById('wuContent');
     if (!el) return;
     const im = obs.imperial;
