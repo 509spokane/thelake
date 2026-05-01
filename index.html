@@ -880,7 +880,7 @@
       <path d="${spdPath.d}"  fill="none" stroke="rgba(80,160,210,0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       ${peakLabels}
     </svg>
-    <div style="text-align:center;font-size:11px;margin-top:6px;display:flex;justify-content:center;gap:18px">
+    <div style="text-align:center;font-size:11px;margin-top:0;display:flex;justify-content:center;gap:18px">
       <span style="color:rgba(80,160,210,0.9)">— wind</span>
       <span style="color:rgba(210,110,30,0.9)">— gusts</span>
     </div>`;
@@ -1313,7 +1313,7 @@
 
       const isWarm = highs[i] != null && highs[i] >= warmThreshold;
       const warmBg = isWarm
-        ? 'background: linear-gradient(to bottom, rgba(180,70,0,0.50) 0%, rgba(180,70,0,0.20) 45%, transparent 80%);'
+        ? 'background: linear-gradient(to bottom, rgba(180,70,0,0.50) 0%, rgba(180,70,0,0.20) 45%, transparent 80%); border-radius: 8px 8px 0 0;'
         : '';
 
       const isToday = d === todayKey;
