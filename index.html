@@ -1650,10 +1650,9 @@
         if (dateStr < todayStr) return;
         const [_y, _m, _dd] = dateStr.split('-');
         const dt = new Date(+_y, +_m - 1, +_dd);
-        const highC = _omData.temperature_2m_max[i];
-        if (highC == null) return;
-        const highF = Math.round(highC * 9/5 + 32);
-        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: highF });
+        const highF = _omData.temperature_2m_max[i];
+        if (highF == null) return;
+        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: Math.round(highF) });
       });
     } else if (_wxDayMap) {
       for (let i = 0; i < 10; i++) {
