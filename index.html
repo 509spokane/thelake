@@ -341,7 +341,7 @@
 <div class="container">
   <header>
     <h1>The <span>Lake</span></h1>
-    <div class="lake-name" style="font-size:10px;margin-top:4px">Lake Roosevelt</div>
+    <div class="lake-name" style="font-size:10px;margin-top:4px">Two Rivers &bull; Lake Roosevelt &bull; Fort Spokane</div>
   </header>
   <div id="statusText" style="display:none"></div>
 
@@ -1342,10 +1342,11 @@
       grid.appendChild(col);
     });
 
-    // Scroll so today's column is the first visible column
+    // Scroll so 3 historical days are visible to the left of today
     const todayCol = grid.querySelector('[data-today="true"]');
     if (todayCol) {
-      requestAnimationFrame(() => { grid.scrollLeft = todayCol.offsetLeft - 6; });
+      const colW = 84; // ~78px col + 6px gap
+      requestAnimationFrame(() => { grid.scrollLeft = Math.max(0, todayCol.offsetLeft - (colW * 3)); });
     }
   }
 
