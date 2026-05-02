@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Lake · Forecast Accuracy</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(180deg, #0a1628 0%, #0d2444 40%, #0e3060 70%, #1a4a7a 100%);
+      min-height: 100vh; color: #e8f4ff; padding: 20px 16px 60px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 { font-size: clamp(28px, 6vw, 44px); font-weight: 300; color: #fff; line-height: 1; }
+    h1 span { color: #4db8e8; }
+    .sub { margin-top: 6px; font-size: 11px; color: #4a7a96; letter-spacing: 0.08em; text-transform: uppercase; }
+    .back { display: inline-block; margin-top: 10px; font-size: 12px; color: #5a9ec0; text-decoration: none; }
+    .back:hover { color: #7ec8e3; text-decoration: underline; }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(77,184,232,0.12);
+      border-radius: 18px; padding: 22px 18px; margin-bottom: 18px;
+      backdrop-filter: blur(6px);
+    }
+    .section-label {
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: #5a9ec0; margin-bottom: 14px;
+    }
+
+    .empty {
+      padding: 22px 12px; text-align: center; font-size: 13px; color: #6a9ab8;
+      line-height: 1.6;
+    }
+
+    table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    th, td {
+      padding: 8px 10px; text-align: left;
+      border-bottom: 1px solid rgba(77,184,232,0.08);
+    }
+    th { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #5a9ec0; font-weight: 500; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .src { font-size: 11px; color: #7ec8e3; }
+    .delta-pos { color: #f0a050; }
+    .delta-neg { color: #50c8a8; }
+    .delta-zero { color: #7ec8e3; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+    }
+    .pill-good { background: rgba(80,200,160,0.18); color: #80e8b8; }
+    .pill-bad  { background: rgba(240,120,80,0.18); color: #f8b896; }
+
+    .lead-row {
+      display: grid; grid-template-columns: 1fr auto auto auto;
+      align-items: center; gap: 14px;
+      padding: 10px 4px; border-bottom: 1px solid rgba(77,184,232,0.08);
+      font-size: 13px;
+    }
+    .lead-row:last-child { border-bottom: none; }
+    .lead-source { font-weight: 600; color: #e8f4ff; }
+    .lead-stat { font-size: 11px; color: #6a9ab8; }
+    .lead-stat-val { color: #c8e8f8; font-weight: 500; }
+
+    .decay-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px; margin-top: 12px;
+    }
+    .decay-card {
+      background: rgba(10,22,40,0.4); border: 1px solid rgba(77,184,232,0.10);
+      border-radius: 12px; padding: 12px;
+    }
+    .decay-title { font-size: 11px; color: #5a9ec0; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .decay-rows { display: flex; flex-direction: column; gap: 4px; }
+    .decay-row { display: flex; justify-content: space-between; font-size: 12px; }
+    .decay-row .lab { color: #7ec8e3; }
+    .decay-row .val { color: #c8e8f8; font-variant-numeric: tabular-nums; }
+
+    footer {
+      text-align: center; font-size: 11px; color: #3a6a82; margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Forecast <span>Accuracy</span></h1>
+    <div class="sub">Three forecasts, one weather station, no opinions</div>
+    <a class="back" href="index.html">← back to The Lake</a>
+  </header>
+
+  <div class="card">
+    <div class="section-label">Source Leaderboard · High Temperature</div>
+    <div id="leaderboard"><div class="empty">Collecting data… check back after a few days of measurements.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Today's Predictions vs Latest Reading</div>
+    <div id="todayWidget"><div class="empty">No data yet for today.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Recent Days · Predicted High vs Actual</div>
+    <div id="recentTable"><div class="empty">No completed days to compare yet.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Accuracy by Days Out</div>
+    <div id="decay"><div class="empty">Need ~2 weeks of data before this becomes meaningful.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Wind Alert Reality Check</div>
+    <div id="windAlerts"><div class="empty">No wind alerts checked yet. Triggered when any source predicts ≥18 mph wind.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Worst Misses</div>
+    <div id="worstMisses"><div class="empty">No data yet.</div></div>
+  </div>
+
+  <footer>
+    <span id="dataMeta">Loading…</span>
+  </footer>
+</div>
+
+<script>
+const SRC_LABELS = { nws: 'weather.gov', weatherapi: 'weatherapi.com', openmeteo: 'open-meteo.com' };
+
+async function loadJsonl(path) {
+  try {
+    const r = await fetch(path + '?t=' + Date.now());
+    if (!r.ok) return [];
+    const text = await r.text();
+    return text.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  } catch { return []; }
+}
+
+function fmtDelta(d) {
+  if (d == null) return '—';
+  const cls = d > 0 ? 'delta-pos' : d < 0 ? 'delta-neg' : 'delta-zero';
+  const s = d > 0 ? `+${d}` : `${d}`;
+  return `<span class="${cls}">${s}°</span>`;
+}
+
+function fmtSrc(s) { return SRC_LABELS[s] || s; }
+
+// Group helpers
+function groupBy(arr, fn) {
+  const m = new Map();
+  for (const item of arr) {
+    const k = fn(item);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(item);
+  }
+  return m;
+}
+
+function median(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
+}
+
+function mean(arr) { return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null; }
+
+// Build a {date → {high, low}} actual map by merging morning_low + afternoon_high readings
+function buildActualsByDate(actuals) {
+  const map = new Map();
+  for (const a of actuals) {
+    if (!a.date) continue;
+    if (!map.has(a.date)) map.set(a.date, { date: a.date, lows: [], highs: [], all: [] });
+    const slot = map.get(a.date);
+    slot.all.push(a);
+    if (a.type === 'morning_low')   slot.lows.push(a.temp_f);
+    if (a.type === 'afternoon_high') slot.highs.push(a.temp_f);
+  }
+  // Reduce to summary
+  for (const [d, v] of map) {
+    v.actual_low  = v.lows.length  ? Math.min(...v.lows)  : null;
+    v.actual_high = v.highs.length ? Math.max(...v.highs) : null;
+  }
+  return map;
+}
+
+// Compute errors per source for matched (forecast, actual) pairs
+function computeErrors(forecasts, actualsByDate) {
+  // Use only the FIRST forecast captured per (source, target_date) — that's the same-morning forecast
+  const firstFc = new Map(); // key: source|target_date → forecast record
+  for (const f of forecasts) {
+    const key = f.source + '|' + f.target_date;
+    if (!firstFc.has(key)) firstFc.set(key, f);
+  }
+  const errors = []; // {source, target_date, days_out, predicted_high, actual_high, err_high, ...}
+  for (const f of firstFc.values()) {
+    const a = actualsByDate.get(f.target_date);
+    if (!a || a.actual_high == null) continue;
+    errors.push({
+      source: f.source,
+      target_date: f.target_date,
+      days_out: f.days_out,
+      predicted_high: f.high_f,
+      actual_high: a.actual_high,
+      err_high: f.high_f != null ? f.high_f - a.actual_high : null,
+      predicted_low: f.low_f,
+      actual_low: a.actual_low,
+      err_low: f.low_f != null && a.actual_low != null ? f.low_f - a.actual_low : null,
+    });
+  }
+  return errors;
+}
+
+// ── Renderers ──────────────────────────────────────────────────────
+function renderLeaderboard(errors) {
+  const el = document.getElementById('leaderboard');
+  if (!errors.length) return;
+  const bySource = groupBy(errors, e => e.source);
+  const rows = [];
+  for (const [src, arr] of bySource) {
+    const errs = arr.map(e => e.err_high).filter(v => v != null);
+    if (!errs.length) continue;
+    const mae = mean(errs.map(Math.abs));
+    const bias = mean(errs);
+    const within2 = errs.filter(e => Math.abs(e) <= 2).length / errs.length;
+    rows.push({ src, n: errs.length, mae, bias, within2 });
+  }
+  rows.sort((a, b) => a.mae - b.mae);
+  if (!rows.length) return;
+  el.innerHTML = rows.map((r, i) => `
+    <div class="lead-row">
+      <div>
+        <span class="pill ${i === 0 ? 'pill-good' : ''}">#${i + 1}</span>
+        <span class="lead-source" style="margin-left:8px">${fmtSrc(r.src)}</span>
+      </div>
+      <div class="lead-stat">avg err <span class="lead-stat-val">${r.mae.toFixed(1)}°</span></div>
+      <div class="lead-stat">bias <span class="lead-stat-val">${r.bias > 0 ? '+' : ''}${r.bias.toFixed(1)}°</span></div>
+      <div class="lead-stat">±2° hit rate <span class="lead-stat-val">${Math.round(r.within2 * 100)}%</span></div>
+    </div>
+  `).join('');
+}
+
+function renderToday(forecasts, actuals) {
+  const todayPstMs = Date.now();
+  const dt = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles', year:'numeric', month:'2-digit', day:'2-digit' });
+  const today = dt.format(new Date(todayPstMs));
+  const fcToday = forecasts.filter(f => f.target_date === today && f.days_out === 0);
+  if (!fcToday.length) return;
+  const todayActuals = actuals.filter(a => a.date === today);
+  const latestActual = todayActuals.length ? todayActuals[todayActuals.length - 1] : null;
+  const actualHigh = todayActuals.filter(a => a.type === 'afternoon_high').map(a => a.temp_f).reduce((m, v) => Math.max(m, v), -Infinity);
+  const hasHigh = isFinite(actualHigh);
+  const rows = fcToday.map(f => {
+    const errH = (f.high_f != null && hasHigh) ? f.high_f - actualHigh : null;
+    return `<tr>
+      <td class="src">${fmtSrc(f.source)}</td>
+      <td class="num">${f.high_f ?? '—'}°</td>
+      <td class="num">${f.low_f ?? '—'}°</td>
+      <td class="num">${f.max_wind_mph ?? '—'} mph</td>
+      <td class="num">${hasHigh ? `${actualHigh}° (${fmtDelta(errH)})` : '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('todayWidget').innerHTML = `
+    <table>
+      <thead><tr><th>Source</th><th class="num">High</th><th class="num">Low</th><th class="num">Wind</th><th class="num">Actual high (Δ)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${latestActual ? `<div style="margin-top:10px;font-size:11px;color:#5a9ec0">Latest WU reading: ${latestActual.temp_f}°F · ${latestActual.wind_mph} mph wind · ${new Date(latestActual.recorded_at).toLocaleString()}</div>` : ''}
+  `;
+}
+
+function renderRecentTable(errors) {
+  const el = document.getElementById('recentTable');
+  if (!errors.length) return;
+  // Group by date, show most recent 14
+  const dates = [...new Set(errors.map(e => e.target_date))].sort().slice(-14).reverse();
+  if (!dates.length) return;
+  // Pivot: rows=date, cols=source
+  const sources = [...new Set(errors.map(e => e.source))];
+  const head = ['Date', 'Actual High', ...sources.map(fmtSrc)];
+  const body = dates.map(d => {
+    const row = errors.filter(e => e.target_date === d);
+    const actual = row[0]?.actual_high;
+    return `<tr>
+      <td>${d}</td>
+      <td class="num">${actual != null ? actual + '°' : '—'}</td>
+      ${sources.map(s => {
+        const r = row.find(x => x.source === s);
+        if (!r || r.predicted_high == null) return '<td class="num">—</td>';
+        return `<td class="num">${r.predicted_high}° (${fmtDelta(r.err_high)})</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table><thead><tr>${head.map(h => `<th class="${h === 'Date' ? '' : 'num'}">${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function renderDecay(errors) {
+  const el = document.getElementById('decay');
+  if (errors.length < 10) return;
+  const buckets = [
+    { label: '1–2 days', test: d => d <= 2 },
+    { label: '3–5 days', test: d => d >= 3 && d <= 5 },
+    { label: '6–10 days', test: d => d >= 6 },
+  ];
+  const sources = [...new Set(errors.map(e => e.source))];
+  const cards = sources.map(src => {
+    const rows = buckets.map(b => {
+      const arr = errors.filter(e => e.source === src && b.test(e.days_out)).map(e => Math.abs(e.err_high)).filter(v => v != null);
+      if (!arr.length) return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val">—</span></div>`;
+      return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val">${mean(arr).toFixed(1)}° (n=${arr.length})</span></div>`;
+    }).join('');
+    return `<div class="decay-card"><div class="decay-title">${fmtSrc(src)}</div><div class="decay-rows">${rows}</div></div>`;
+  }).join('');
+  el.innerHTML = `<div class="decay-grid">${cards}</div>`;
+}
+
+function renderWindAlerts(actuals) {
+  const el = document.getElementById('windAlerts');
+  const alerts = actuals.filter(a => a.type === 'wind_alert');
+  if (!alerts.length) return;
+  const rows = alerts.slice(-20).reverse().map(a => {
+    const dWind = a.predicted_wind_mph != null && a.wind_mph != null ? a.wind_mph - a.predicted_wind_mph : null;
+    const dGust = a.predicted_gust_mph != null && a.gust_mph != null ? a.gust_mph - a.predicted_gust_mph : null;
+    const fmt = (v) => v == null ? '—' : `<span class="${v > 0 ? 'delta-neg' : v < 0 ? 'delta-pos' : 'delta-zero'}">${v > 0 ? '+' : ''}${v}</span>`;
+    return `<tr>
+      <td>${a.date} ${String(a.hour).padStart(2,'0')}:00</td>
+      <td class="src">${fmtSrc(a.predicted_source)}</td>
+      <td class="num">${a.predicted_wind_mph ?? '—'} / ${a.predicted_gust_mph ?? '—'}</td>
+      <td class="num">${a.wind_mph ?? '—'} / ${a.gust_mph ?? '—'}</td>
+      <td class="num">wind ${fmt(dWind)}, gust ${fmt(dGust)}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table>
+    <thead><tr><th>When</th><th>Source</th><th class="num">Predicted (wind/gust)</th><th class="num">Actual</th><th class="num">Δ</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderWorstMisses(errors) {
+  const el = document.getElementById('worstMisses');
+  const sorted = [...errors].filter(e => e.err_high != null).sort((a, b) => Math.abs(b.err_high) - Math.abs(a.err_high)).slice(0, 5);
+  if (!sorted.length) return;
+  el.innerHTML = `<table>
+    <thead><tr><th>Date</th><th>Source</th><th class="num">Days out</th><th class="num">Predicted</th><th class="num">Actual</th><th class="num">Miss</th></tr></thead>
+    <tbody>${sorted.map(e => `
+      <tr>
+        <td>${e.target_date}</td>
+        <td class="src">${fmtSrc(e.source)}</td>
+        <td class="num">${e.days_out}</td>
+        <td class="num">${e.predicted_high}°</td>
+        <td class="num">${e.actual_high}°</td>
+        <td class="num">${fmtDelta(e.err_high)}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ── Main ──
+async function init() {
+  const [forecasts, actuals] = await Promise.all([
+    loadJsonl('data/forecasts.jsonl'),
+    loadJsonl('data/actuals.jsonl'),
+  ]);
+  document.getElementById('dataMeta').textContent =
+    `${forecasts.length} forecast records · ${actuals.length} actuals · last updated ${new Date().toLocaleString()}`;
+  if (!forecasts.length && !actuals.length) return;
+
+  const actualsByDate = buildActualsByDate(actuals);
+  const errors = computeErrors(forecasts, actualsByDate);
+
+  renderToday(forecasts, actuals);
+  renderLeaderboard(errors);
+  renderRecentTable(errors);
+  renderDecay(errors);
+  renderWindAlerts(actuals);
+  renderWorstMisses(errors);
+}
+init();
+</script>
+</body>
+</html>
