@@ -1761,7 +1761,7 @@
       }
 
       // ── SVG curve chart: 10-day high temps ──
-      const svgW = 560, svgH = 70, padL = 2, padR = 2, padT = 16, padB = 18;
+      const svgW = 560, svgH = Math.round(70 * _svgScale), padL = 2, padR = 2, padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
       const n = highsByDate.length;
       const xOf = i => padL + (i / (n - 1)) * (svgW - padL - padR);
       const yOf = v => padT + (1 - (v - minHigh) / Math.max(1, maxHigh - minHigh)) * (svgH - padT - padB);
@@ -1834,7 +1834,7 @@
         const peakStr = topPeaks.length ? ', peaking at ' + topPeaks.map(p => hl(fmtPeak(p.t))).join(' and ') : '';
 
         // ── SVG curve chart: 48-hour gust ──
-        const wsvgW = 560, wsvgH = 80, wpadL = 2, wpadR = 2, wpadT = 32, wpadB = 18;
+        const wsvgW = 560, wsvgH = Math.round(80 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(32 * _svgScale), wpadB = Math.round(18 * _svgScale);
         const wn = slots.length;
         const wxOf = i => wpadL + (i / (wn - 1)) * (wsvgW - wpadL - wpadR);
         const wyOf = v => wpadT + (1 - v / Math.max(1, maxGust)) * (wsvgH - wpadT - wpadB);
@@ -1945,7 +1945,7 @@
           }
         }
         // Mini water level SVG curve chart
-        const wlW = 560, wlH = 64, wlPadL = 2, wlPadR = 2, wlPadT = 14, wlPadB = 18;
+        const wlW = 560, wlH = Math.round(64 * _svgScale), wlPadL = 2, wlPadR = 2, wlPadT = Math.round(14 * _svgScale), wlPadB = Math.round(18 * _svgScale);
         const wlN = elevs.length;
         const wlMin = Math.min(...elevs) - 0.2;
         const wlMax = Math.max(...elevs) + 0.2;
