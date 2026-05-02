@@ -1834,7 +1834,7 @@
         const peakStr = topPeaks.length ? ', peaking at ' + topPeaks.map(p => hl(fmtPeak(p.t))).join(' and ') : '';
 
         // ── SVG curve chart: 48-hour gust ──
-        const wsvgW = 560, wsvgH = Math.round(80 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(32 * _svgScale), wpadB = Math.round(18 * _svgScale);
+        const wsvgW = 560, wsvgH = Math.round(80 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(50 * _svgScale), wpadB = Math.round(18 * _svgScale);
         const wn = slots.length;
         const wxOf = i => wpadL + (i / (wn - 1)) * (wsvgW - wpadL - wpadR);
         const wyOf = v => wpadT + (1 - v / Math.max(1, maxGust)) * (wsvgH - wpadT - wpadB);
@@ -1883,8 +1883,9 @@
           const timeLabel = run.length === 1
             ? fmtHr(run[0].t)
             : `${fmtHr(run[0].t)}–${fmtHr(run[run.length-1].t)}`;
-          windyDots += `<text x="${cx}" y="${peakY - 16}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
-          windyDots += `<text x="${cx}" y="${peakY - 6}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
+          const lblGap = Math.round(16 * _svgScale);
+          windyDots += `<text x="${cx}" y="${peakY - lblGap - Math.round(14 * _svgScale)}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
+          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
           wi = wj;
         }
 
