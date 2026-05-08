@@ -242,9 +242,9 @@ function renderLeaderboard(errors) {
         <span class="pill ${i === 0 ? 'pill-good' : ''}">#${i + 1}</span>
         <span class="lead-source" style="margin-left:8px">${fmtSrc(r.src)}</span>
       </div>
-      <div class="lead-stat" title="avg error: mean absolute difference between prediction and actual">avg err <span class="lead-stat-val">${r.mae.toFixed(1)}°</span></div>
-      <div class="lead-stat" title="bias: positive = tends to overestimate, negative = tends to underestimate">bias <span class="lead-stat-val">${r.bias > 0 ? '+' : ''}${r.bias.toFixed(1)}°</span></div>
-      <div class="lead-stat" title="hit rate: % of predictions within ±2°F of actual">±2° hit <span class="lead-stat-val">${Math.round(r.within2 * 100)}%</span></div>
+      <div class="lead-stat" title="avg error: mean absolute difference between prediction and actual">On average, prediction is off by <span class="lead-stat-val">${r.mae.toFixed(1)}°</span></div>
+      <div class="lead-stat" title="bias: positive = tends to overestimate, negative = tends to underestimate">Tends to over or underestimate by <span class="lead-stat-val">${r.bias > 0 ? '+' : ''}${r.bias.toFixed(1)}°</span></div>
+      <div class="lead-stat" title="hit rate: % of predictions within ±2°F of actual"><span class="lead-stat-val">${Math.round(r.within2 * 100)}%</span> of predictions are within 4°</div>
       <div style="font-size:11px;color:#5a9ec0;margin-top:6px;padding-top:6px;border-top:1px solid rgba(74,142,170,0.3)">${fmtSrc(r.src)} ${biasText}</div>
     </div>
   `;
