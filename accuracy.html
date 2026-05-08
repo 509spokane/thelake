@@ -243,9 +243,11 @@ function renderLeaderboard(errors) {
         <span class="lead-source" style="margin-left:8px">${fmtSrc(r.src)}</span>
       </div>
       <div style="height:8px"></div>
-      <div class="lead-stat" title="avg error: mean absolute difference between prediction and actual">On average, prediction is off by <span class="lead-stat-val">${r.mae.toFixed(1)}°</span></div>
-      <div class="lead-stat" title="bias: positive = tends to overestimate, negative = tends to underestimate">Tends to over or underestimate by <span class="lead-stat-val">${r.bias > 0 ? '+' : ''}${r.bias.toFixed(1)}°</span></div>
-      <div class="lead-stat" title="hit rate: % of predictions within ±2°F of actual"><span class="lead-stat-val">${Math.round(r.within2 * 100)}%</span> of predictions are within 4°</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div class="lead-stat" title="avg error: mean absolute difference between prediction and actual">On average, prediction is off by <span class="lead-stat-val">${r.mae.toFixed(1)}°</span></div>
+        <div class="lead-stat" title="bias: positive = tends to overestimate, negative = tends to underestimate">Tends to over or underestimate by <span class="lead-stat-val">${r.bias > 0 ? '+' : ''}${r.bias.toFixed(1)}°</span></div>
+        <div class="lead-stat" title="hit rate: % of predictions within ±2°F of actual"><span class="lead-stat-val">${Math.round(r.within2 * 100)}%</span> of predictions are within 4°</div>
+      </div>
     </div>
   `;
   }).join('');
