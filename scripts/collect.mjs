@@ -209,8 +209,8 @@ async function main() {
 
   console.log(`Pacific ${pstDate} ${pstHour}:00 — state day=${state.day}`);
 
-  // Morning routine — 06:00 PT
-  if (pstHour === 6 && !state.morning_done) {
+  // Morning routine — 06:00–08:59 PT (window to handle GitHub Actions cron delays)
+  if (pstHour >= 6 && pstHour <= 8 && !state.morning_done) {
     console.log('→ morning routine');
     const [om, wa, nws] = await Promise.all([
       safe('openmeteo', fetchOpenMeteo),
@@ -279,8 +279,8 @@ async function main() {
     console.log(`  wind_alerts: ${state.wind_alerts.length}, random_hour: ${state.random_hour}`);
   }
 
-  // Afternoon — 15:00 PT
-  if (pstHour === 15 && !state.afternoon_done) {
+  // Afternoon — 14:00–16:59 PT (window to handle GitHub Actions cron delays)
+  if (pstHour >= 14 && pstHour <= 16 && !state.afternoon_done) {
     console.log('→ afternoon high check');
     const wu = await safe('wu', fetchWU);
     if (wu) appendJsonl(FILES.actuals, {
@@ -293,7 +293,7 @@ async function main() {
 
   // Wind alerts
   for (const a of (state.wind_alerts || [])) {
-    if (a.hour === pstHour && !a.checked) {
+    if (a.hour <= pstHour && !a.checked) {  // <= catches delayed cron runs
       console.log(`→ wind alert check hour=${pstHour} predicted=${a.predicted_wind_mph}/${a.predicted_gust_mph} (${a.source})`);
       const wu = await safe('wu', fetchWU);
       if (wu) appendJsonl(FILES.actuals, {
