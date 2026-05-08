@@ -145,7 +145,7 @@ async function loadJsonl(path) {
 function fmtDelta(d) {
   if (d == null) return '—';
   const cls = d > 0 ? 'delta-pos' : d < 0 ? 'delta-neg' : 'delta-zero';
-  const s = d > 0 ? `+${d}` : `${d}`;
+  const s = d > 0 ? `+${d.toFixed(1)}` : `${d.toFixed(1)}`;
   return `<span class="${cls}">${s}°</span>`;
 }
 
