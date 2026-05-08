@@ -45,6 +45,7 @@
       border-bottom: 1px solid rgba(77,184,232,0.08);
     }
     th { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #5a9ec0; font-weight: 500; }
+    th.num { text-align: right; }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
     .src { font-size: 11px; color: #7ec8e3; }
     .delta-pos { color: #f0a050; }
@@ -272,7 +273,7 @@ function renderToday(forecasts, actuals) {
   }).join('');
   document.getElementById('todayWidget').innerHTML = `
     <table>
-      <thead><tr><th>Source</th><th class="num">High</th><th class="num">Low</th><th class="num">Wind</th><th class="num">Actual high (Δ)</th></tr></thead>
+      <thead><tr><th>Source</th><th class="num" style="text-align:right">High</th><th class="num" style="text-align:right">Low</th><th class="num" style="text-align:right">Wind</th><th class="num" style="text-align:right">Actual high (Δ)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     ${latestActual ? `<div style="margin-top:10px;font-size:11px;color:#5a9ec0">Latest WU reading: ${latestActual.temp_f}°F · ${latestActual.wind_mph} mph wind · ${new Date(latestActual.recorded_at).toLocaleString()}</div>` : ''}
@@ -293,15 +294,20 @@ function renderRecentTable(errors) {
     const actual = row[0]?.actual_high;
     return `<tr>
       <td>${d}</td>
-      <td class="num">${actual != null ? actual + '°' : '—'}</td>
+      <td class="num" style="width:12%">${actual != null ? actual + '°' : '—'}</td>
       ${sources.map(s => {
         const r = row.find(x => x.source === s);
-        if (!r || r.predicted_high == null) return '<td class="num">—</td>';
-        return `<td class="num">${r.predicted_high}° (${fmtDelta(r.err_high)})</td>`;
+        if (!r || r.predicted_high == null) return '<td class="num" style="width:12%">—</td>';
+        return `<td class="num" style="width:12%">${r.predicted_high}° (${fmtDelta(r.err_high)})</td>`;
       }).join('')}
     </tr>`;
   }).join('');
-  el.innerHTML = `<table><thead><tr>${head.map(h => `<th class="${h === 'Date' ? '' : 'num'}" style="text-align:${h === 'Date' ? 'left' : 'right'}">${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+  el.innerHTML = `<table><thead><tr>${head.map((h, i) => {
+    const isNumCol = h !== 'Date';
+    const isWideCol = h === 'Actual High' || sources.map(fmtSrc).includes(h);
+    const width = isWideCol ? '12%' : '';
+    return `<th class="${isNumCol ? 'num' : ''}" style="text-align:${h === 'Date' ? 'left' : 'right'};${width ? 'width:' + width : ''}">${h}</th>`;
+  }).join('')}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
 function renderDecay(errors) {
