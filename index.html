@@ -2134,7 +2134,7 @@
 
   async function fetchAlerts() {
     try {
-      const res = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`, {
+      const res = await fetch(`https://api.weather.gov/alerts/active?point=47.9048,-118.3046`, {
         headers: { 'User-Agent': 'TheLakeApp/1.0 (github.com/509spokane/thelake)' }
       });
       const data = await res.json();
