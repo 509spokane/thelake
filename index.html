@@ -639,7 +639,7 @@
   async function fetchLakeData() {
     const html = await proxyFetch(LAKE_SOURCE);
     if (!html) {
-      document.getElementById('statusDot').className = 'status-dot error';
+      const _sd1 = document.getElementById('statusDot'); if (_sd1) _sd1.className = 'status-dot error';
       document.getElementById('statusText').textContent = 'Could not load lake data';
       return;
     }
@@ -663,7 +663,7 @@
     _lakeDays = { dates, elevs };
     updateHeaderStats();
 
-    document.getElementById('statusDot').className = 'status-dot';
+    const _sd2 = document.getElementById('statusDot'); if (_sd2) _sd2.className = 'status-dot';
     document.getElementById('statusText').textContent = 'Live data · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     document.getElementById('fetchedAt').textContent = 'Updated ' + new Date().toLocaleString();
 
@@ -2129,7 +2129,7 @@
   fetchWind();        // Open-Meteo wind
   fetchOpenWeather();
   // Current conditions on by default
-  document.getElementById('showWuSection').checked = true;
+  const _wuChk = document.getElementById('showWuSection'); if (_wuChk) _wuChk.checked = true;
   document.getElementById('wuSection').style.display = 'block';
   fetchWunderground();
 </script>
