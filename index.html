@@ -2067,17 +2067,49 @@
   }
 
   async function fetchWunderground() {
+    // Try live API first; api.weather.com blocks browser CORS so fall back to cached actuals
+    let liveFailed = false;
     try {
       const url = `https://api.weather.com/v2/pws/observations/current?stationId=${WUNDERGROUND_STATION}&format=json&units=e&numericPrecision=decimal&apiKey=${WUNDERGROUND_KEY}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.observations && data.observations.length) {
         renderWuData(data.observations[0]);
-      } else {
-        document.getElementById('wuContent').textContent = 'Station offline or no data available.';
+        return;
       }
+      liveFailed = true;
     } catch(e) {
-      document.getElementById('wuContent').textContent = 'Could not load station data.';
+      liveFailed = true;
+    }
+    // Fall back to most recent entry in actuals.jsonl (captured by bot)
+    if (liveFailed) {
+      try {
+        const res = await fetch('data/actuals.jsonl');
+        const text = await res.text();
+        const lines = text.trim().split('\n').filter(Boolean);
+        if (!lines.length) throw new Error('no data');
+        const latest = JSON.parse(lines[lines.length - 1]);
+        const age = Math.round((Date.now() - new Date(latest.recorded_at)) / 60000);
+        const ageStr = age < 60 ? `${age}m ago` : `${Math.round(age/60)}h ago`;
+        const dirLabel = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round((latest.wind_dir_deg||0) / 22.5) % 16];
+        const row = (icon, label, val) =>
+          `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(77,184,232,0.07)">
+            <span style="font-size:calc(18px * var(--fs));width:26px;text-align:center">${icon}</span>
+            <span style="font-size:calc(11px * var(--fs));color:#4a8aaa;text-transform:uppercase;letter-spacing:0.1em;flex:1">${label}</span>
+            <span style="font-size:calc(15px * var(--fs));color:#e8f4ff;font-weight:500">${val}</span>
+          </div>`;
+        document.getElementById('wuContent').innerHTML =
+          `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0 24px">` +
+            row('🌡️', 'Temperature', `${latest.temp_f}°F`) +
+            row('💨', 'Wind', `${latest.wind_mph} mph ${dirLabel}`) +
+            row('🌬️', 'Gusts', `${latest.gust_mph} mph`) +
+            row('💧', 'Humidity', `${latest.humidity}%`) +
+            row('🌧️', 'Precip Today', `${latest.precip_today_in}"`) +
+          `</div>` +
+          `<div style="text-align:right;font-size:calc(10px * var(--fs));color:#3a6a82;margin-top:8px">Last captured ${ageStr} · live fetch blocked by CORS</div>`;
+      } catch(e2) {
+        document.getElementById('wuContent').textContent = 'Station data unavailable.';
+      }
     }
   }
 
