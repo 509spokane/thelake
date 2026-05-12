@@ -454,6 +454,13 @@
 <script>
   // ── Data source toggle ─────────────────────────────────────
   let _forecastSource = 'weatherapi'; // 'nws', 'openmeteo', 'weatherapi', 'openweather'
+  // Load saved forecast source preference
+  (() => {
+    const saved = localStorage.getItem('forecastSource');
+    if (saved && ['nws', 'openmeteo', 'weatherapi', 'openweather'].includes(saved)) {
+      _forecastSource = saved;
+    }
+  })();
   let _weatherAPIData = null;
   let _openWeatherData = null;
   let _showHistoricWaterLevels = true;
@@ -1689,6 +1696,7 @@
 
   function onSourceChange(val) {
     _forecastSource = val;
+    localStorage.setItem('forecastSource', val);
     updateSourceLabels();
     // Close all pickers
     document.querySelectorAll('.inline-source-picker').forEach(p => p.style.display = 'none');
