@@ -2067,20 +2067,29 @@
   }
 
   async function fetchWunderground() {
-    // Try live API first; api.weather.com blocks browser CORS so fall back to cached actuals
+    const wuUrl = `https://api.weather.com/v2/pws/observations/current?stationId=${WUNDERGROUND_STATION}&format=json&units=e&numericPrecision=decimal&apiKey=${WUNDERGROUND_KEY}`;
     let liveFailed = false;
+
+    // 1. Try direct API call
     try {
-      const url = `https://api.weather.com/v2/pws/observations/current?stationId=${WUNDERGROUND_STATION}&format=json&units=e&numericPrecision=decimal&apiKey=${WUNDERGROUND_KEY}`;
-      const res = await fetch(url);
+      const res = await fetch(wuUrl);
       const data = await res.json();
       if (data.observations && data.observations.length) {
         renderWuData(data.observations[0]);
         return;
       }
-      liveFailed = true;
-    } catch(e) {
-      liveFailed = true;
-    }
+    } catch(e) { /* CORS or network error, try proxy */ }
+
+    // 2. Try via CORS proxy (corsproxy.io)
+    try {
+      const proxied = `https://corsproxy.io/?${encodeURIComponent(wuUrl)}`;
+      const res = await fetch(proxied);
+      const data = await res.json();
+      if (data.observations && data.observations.length) {
+        renderWuData(data.observations[0]);
+        return;
+      }
+    } catch(e) { liveFailed = true; }
     // Fall back to most recent entry in actuals.jsonl (captured by bot)
     if (liveFailed) {
       try {
@@ -2106,7 +2115,7 @@
             row('💧', 'Humidity', `${latest.humidity}%`) +
             row('🌧️', 'Precip Today', `${latest.precip_today_in}"`) +
           `</div>` +
-          `<div style="text-align:right;font-size:calc(10px * var(--fs));color:#3a6a82;margin-top:8px">Last captured ${ageStr} · live fetch blocked by CORS</div>`;
+          `<div style="text-align:right;font-size:calc(10px * var(--fs));color:#3a6a82;margin-top:8px">Last captured ${ageStr} · station KWADAVEN5</div>`;
       } catch(e2) {
         document.getElementById('wuContent').textContent = 'Station data unavailable.';
       }
