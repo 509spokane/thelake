@@ -379,6 +379,7 @@
     <h1>The <span>Lake</span></h1>
     <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Two Rivers &bull; Lake Roosevelt &bull; Fort Spokane</div>
     <div style="margin-top:6px;font-size:calc(11px * var(--fs));color:#4a7a96;letter-spacing:0.08em">Weather, Wind, &amp; Water Level Info</div>
+    <div id="alertBanner"></div>
   </header>
   <div id="statusText" style="display:none"></div>
 
@@ -2125,10 +2126,60 @@
   fetchWeather();     // NWS (default source)
   fetchWind();        // Open-Meteo wind
   fetchOpenWeather();
+  fetchAlerts();
   // Current conditions on by default
   const _wuChk = document.getElementById('showWuSection'); if (_wuChk) _wuChk.checked = true;
   document.getElementById('wuSection').style.display = 'block';
   fetchWunderground();
+
+  async function fetchAlerts() {
+    try {
+      const res = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`, {
+        headers: { 'User-Agent': 'TheLakeApp/1.0 (github.com/509spokane/thelake)' }
+      });
+      const data = await res.json();
+      const alerts = (data.features || []).filter(f => f.properties?.status === 'Actual');
+      const banner = document.getElementById('alertBanner');
+      if (!alerts.length) { banner.innerHTML = ''; return; }
+
+      banner.innerHTML = alerts.map(f => {
+        const p = f.properties;
+        const event = p.event || 'Weather Alert';
+
+        // Parse time window
+        const fmtAlertTime = iso => {
+          const d = new Date(iso);
+          return d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles',
+            weekday: 'short', month: 'numeric', day: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true
+          }).replace(':00', '').replace(/ AM/, 'am').replace(/ PM/, 'pm');
+        };
+        const start = p.onset || p.effective;
+        const end   = p.expires || p.ends;
+        const timeRange = start && end
+          ? `${fmtAlertTime(start)} – ${fmtAlertTime(end)}`
+          : '';
+
+        // Extract the WHAT line from description
+        const whatMatch = (p.description || '').match(/\*\s*WHAT[.\s]*\.([\s\S]*?)(?=\n\*|\n\n|$)/i);
+        const what = whatMatch ? whatMatch[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : '';
+
+        // Link to NWS details
+        const nwsUrl = `https://forecast.weather.gov/showsigwx.php?warntype=&warnyear=&warnmonth=&warnday=&warnnum=&wfo=OTX`;
+        const detailUrl = p['@id'] || nwsUrl;
+
+        return `<div style="margin-top:10px;padding:8px 14px;background:rgba(220,140,30,0.15);border:1px solid rgba(220,140,30,0.4);border-radius:8px;text-align:center">
+          <a href="${detailUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+            <span style="font-size:calc(12px * var(--fs));font-weight:600;color:#f0c060;letter-spacing:0.05em">⚠️ ${event}</span>
+            ${timeRange ? `<span style="font-size:calc(11px * var(--fs));color:#c8a050;margin-left:10px">${timeRange}</span>` : ''}
+            ${what ? `<div style="font-size:calc(11px * var(--fs));color:#c8a868;margin-top:4px">${what}</div>` : ''}
+          </a>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      console.warn('[alerts] fetch failed:', e.message);
+    }
+  }
 </script>
 
 <script data-goatcounter="https://thelake.goatcounter.com/count"
