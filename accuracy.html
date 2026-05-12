@@ -275,7 +275,7 @@ function renderToday(forecasts, actuals) {
   }).join('');
   document.getElementById('todayWidget').innerHTML = `
     <table>
-      <thead><tr><th>Source</th><th class="num" style="text-align:right">High</th><th class="num" style="text-align:right">Low</th><th class="num" style="text-align:right">Wind</th><th class="num" style="text-align:right">Actual high (Δ)</th></tr></thead>
+      <thead><tr><th>Source</th><th class="num" style="text-align:right">High</th><th class="num" style="text-align:right">Low</th><th class="num" style="text-align:right">Wind</th><th class="num" style="text-align:right">Actual F-Dock High (Δ)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     ${latestActual ? `<div style="margin-top:10px;font-size:11px;color:#5a9ec0">Latest WU reading: ${latestActual.temp_f}°F · ${latestActual.wind_mph} mph wind · ${new Date(latestActual.recorded_at).toLocaleString()}</div>` : ''}
@@ -290,7 +290,7 @@ function renderRecentTable(errors) {
   if (!dates.length) return;
   // Pivot: rows=date, cols=source
   const sources = [...new Set(errors.map(e => e.source))];
-  const head = ['Date', 'Actual High', ...sources.map(fmtSrc)];
+  const head = ['Date', 'Actual F-Dock High', ...sources.map(fmtSrc)];
   const body = dates.map(d => {
     const row = errors.filter(e => e.target_date === d);
     const actual = row[0]?.actual_high;
@@ -306,7 +306,7 @@ function renderRecentTable(errors) {
   }).join('');
   el.innerHTML = `<table><thead><tr>${head.map((h, i) => {
     const isNumCol = h !== 'Date';
-    const isWideCol = h === 'Actual High' || sources.map(fmtSrc).includes(h);
+    const isWideCol = h === 'Actual F-Dock High' || sources.map(fmtSrc).includes(h);
     const width = isWideCol ? '12%' : '';
     return `<th class="${isNumCol ? 'num' : ''}" style="text-align:${h === 'Date' ? 'left' : 'right'};${width ? 'width:' + width : ''}">${h}</th>`;
   }).join('')}</tr></thead><tbody>${body}</tbody></table>`;
@@ -349,7 +349,7 @@ function renderWindAlerts(actuals) {
     </tr>`;
   }).join('');
   el.innerHTML = `<table>
-    <thead><tr><th>When</th><th>Source</th><th class="num">Predicted (wind/gust)</th><th class="num">Actual</th><th class="num">Δ</th></tr></thead>
+    <thead><tr><th>When</th><th>Source</th><th class="num">Predicted (wind/gust)</th><th class="num">Actual F-Dock</th><th class="num">Δ</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -359,7 +359,7 @@ function renderWorstMisses(errors) {
   const sorted = [...errors].filter(e => e.err_high != null).sort((a, b) => Math.abs(b.err_high) - Math.abs(a.err_high)).slice(0, 5);
   if (!sorted.length) return;
   el.innerHTML = `<table>
-    <thead><tr><th>Date</th><th>Source</th><th class="num">Days out</th><th class="num">Predicted</th><th class="num">Actual</th><th class="num">Miss</th></tr></thead>
+    <thead><tr><th>Date</th><th>Source</th><th class="num">Days out</th><th class="num">Predicted</th><th class="num">Actual F-Dock</th><th class="num">Miss</th></tr></thead>
     <tbody>${sorted.map(e => `
       <tr>
         <td>${e.target_date}</td>
