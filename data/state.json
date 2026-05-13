@@ -1,7 +1,7 @@
 {
   "day": "2026-05-13",
   "morning_done": true,
-  "afternoon_done": false,
+  "afternoon_done": true,
   "wind_alerts": [
     {
       "hour": 10,
@@ -29,14 +29,14 @@
       "predicted_wind_mph": 19,
       "predicted_gust_mph": 31,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 15,
       "predicted_wind_mph": 22,
       "predicted_gust_mph": 37,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 16,
