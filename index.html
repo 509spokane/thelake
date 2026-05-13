@@ -1916,15 +1916,20 @@
           const aEnd   = Math.min(_activeWindAlert.end.getTime(), tEnd);
           if (aEnd > aStart && tEnd > tStart) {
             const xTo = t => wpadL + ((t - tStart) / (tEnd - tStart)) * (wsvgW - wpadL - wpadR);
-            const x1 = xTo(aStart), x2 = xTo(aEnd);
-            const leftPct  = (x1 / wsvgW) * 100;
-            const widthPct = ((x2 - x1) / wsvgW) * 100;
-            const nwsUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
-            advisoryHTML = `<a href="${nwsUrl}" target="_blank" rel="noopener" style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:hidden;text-decoration:none">⚠ ${_activeWindAlert.event}</a>`;
+            // Slight inset so the band reads as inside the timeframe, not overflowing it
+            const inset = 4;
+            const x1 = xTo(aStart) + inset;
+            const x2 = xTo(aEnd) - inset;
+            if (x2 > x1) {
+              const leftPct  = (x1 / wsvgW) * 100;
+              const widthPct = ((x2 - x1) / wsvgW) * 100;
+              const nwsUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
+              advisoryHTML = `<a href="${nwsUrl}" target="_blank" rel="noopener" style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:hidden;text-decoration:none">⚠ ${_activeWindAlert.event}</a>`;
+            }
           }
         }
 
-        const chartSvg = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
+        const chartSvg = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" preserveAspectRatio="none" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
           `<stop offset="100%" stop-color="rgba(47,116,164,0.05)"/>` +
