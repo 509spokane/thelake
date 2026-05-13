@@ -1880,28 +1880,42 @@
           dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
         });
 
-        // Orange dots + label (time on top, mph + emoji below) centered over each windy run
+        // Orange dots for every above-threshold slot, plus one merged label per run group.
+        // Runs whose gap is within MERGE_GAP_HRS are combined so close clusters don't overlap.
         let windyDots = '';
+        const rawRuns = [];
         let wi = 0;
         while (wi < slots.length) {
           if (slots[wi].gust < gustThreshold) { wi++; continue; }
           let wj = wi;
           while (wj < slots.length && slots[wj].gust >= gustThreshold) wj++;
-          const run = slots.slice(wi, wj);
-          run.forEach((s, k) => {
-            windyDots += `<circle cx="${wxOf(wi + k)}" cy="${wyOf(s.gust)}" r="2.5" fill="rgba(210,90,20,0.9)"/>`;
-          });
-          const peakS = run.reduce((a, b) => b.gust > a.gust ? b : a);
-          const cx = (wxOf(wi) + wxOf(wj - 1)) / 2;
+          rawRuns.push({ startIdx: wi, endIdx: wj - 1 });
+          wi = wj;
+        }
+        const MERGE_GAP_HRS = 5;
+        const mergedRuns = [];
+        for (const r of rawRuns) {
+          const last = mergedRuns[mergedRuns.length - 1];
+          const gapHrs = last ? (slots[r.startIdx].t - slots[last.endIdx].t) / 3600000 : Infinity;
+          if (last && gapHrs <= MERGE_GAP_HRS) last.endIdx = r.endIdx;
+          else mergedRuns.push({ startIdx: r.startIdx, endIdx: r.endIdx });
+        }
+        slots.forEach((s, i) => {
+          if (s.gust >= gustThreshold) {
+            windyDots += `<circle cx="${wxOf(i)}" cy="${wyOf(s.gust)}" r="2.5" fill="rgba(210,90,20,0.9)"/>`;
+          }
+        });
+        for (const m of mergedRuns) {
+          const runSlots = slots.slice(m.startIdx, m.endIdx + 1);
+          const peakS = runSlots.reduce((a, b) => b.gust > a.gust ? b : a);
+          const cx = (wxOf(m.startIdx) + wxOf(m.endIdx)) / 2;
           const peakY = wyOf(peakS.gust);
-          // Time label above mph label
-          const timeLabel = run.length === 1
-            ? fmtHr(run[0].t)
-            : `${fmtHr(run[0].t)}–${fmtHr(run[run.length-1].t)}`;
+          const timeLabel = m.startIdx === m.endIdx
+            ? fmtHr(slots[m.startIdx].t)
+            : `${fmtHr(slots[m.startIdx].t)}–${fmtHr(slots[m.endIdx].t)}`;
           const lblGap = Math.round(16 * _svgScale);
           windyDots += `<text x="${cx}" y="${peakY - lblGap - Math.round(14 * _svgScale)}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
           windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
-          wi = wj;
         }
 
         const gustPart = maxGust > 10 ? `, gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}` : '';
