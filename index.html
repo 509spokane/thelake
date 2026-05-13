@@ -1906,30 +1906,7 @@
 
         const gustPart = maxGust > 10 ? `, gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}` : '';
         const windSentence = `Wind averaging ${hl(avgWind + ' mph')}${gustPart}.`;
-
-        // ── Wind advisory overlay: thin HTML band above the chart spanning the alert window ──
-        let advisoryHTML = '';
-        if (typeof _activeWindAlert !== 'undefined' && _activeWindAlert) {
-          const tStart = slots[0].t.getTime();
-          const tEnd   = slots[slots.length - 1].t.getTime();
-          const aStart = Math.max(_activeWindAlert.start.getTime(), tStart);
-          const aEnd   = Math.min(_activeWindAlert.end.getTime(), tEnd);
-          if (aEnd > aStart && tEnd > tStart) {
-            const xTo = t => wpadL + ((t - tStart) / (tEnd - tStart)) * (wsvgW - wpadL - wpadR);
-            // Slight inset so the band reads as inside the timeframe, not overflowing it
-            const inset = 4;
-            const x1 = xTo(aStart) + inset;
-            const x2 = xTo(aEnd) - inset;
-            if (x2 > x1) {
-              const leftPct  = (x1 / wsvgW) * 100;
-              const widthPct = ((x2 - x1) / wsvgW) * 100;
-              const nwsUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
-              advisoryHTML = `<a href="${nwsUrl}" target="_blank" rel="noopener" style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:hidden;text-decoration:none">⚠ ${_activeWindAlert.event}</a>`;
-            }
-          }
-        }
-
-        const chartSvg = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" preserveAspectRatio="none" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
+        const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
           `<stop offset="100%" stop-color="rgba(47,116,164,0.05)"/>` +
@@ -1937,9 +1914,7 @@
           dayLines +
           `<path d="${wfill}" fill="url(#wg)"/>` +
           `<path d="${wcurve}" fill="none" stroke="rgba(80,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-          windyDots + `</svg>`;
-
-        const windChart = `<div style="position:relative;${advisoryHTML ? 'padding-top:26px;' : ''}">${advisoryHTML}${chartSvg}</div>` +
+          windyDots + `</svg>` +
           `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
 
         blocks.push(`<div style="margin-top:36px;margin-bottom:24px"><div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>${windChart}</div>`);
@@ -2165,7 +2140,6 @@
   document.getElementById('wuSection').style.display = 'block';
   fetchWunderground();
 
-  let _activeWindAlert = null;
   async function fetchAlerts() {
     try {
       const res = await fetch(`https://api.weather.gov/alerts/active?point=47.9048,-118.3046`, {
@@ -2174,37 +2148,6 @@
       const data = await res.json();
       const alerts = (data.features || []).filter(f => f.properties?.status === 'Actual');
       const banner = document.getElementById('alertBanner');
-
-      // Identify a wind-related alert for the summary chart overlay
-      _activeWindAlert = null;
-      const parseAlertWind = text => {
-        const t = text || '';
-        const gustM = t.match(/gusts?\s+(?:up\s+)?to\s+(\d+)\s*mph/i);
-        const stripped = t.replace(/(?:with\s+|and\s+)?gusts?\s+(?:up\s+)?to\s+\d+\s*mph/gi, '');
-        const rangeM  = stripped.match(/(\d+)\s*to\s*(\d+)\s*mph/i);
-        const singleM = !rangeM && stripped.match(/(\d+)\s*mph/i);
-        const dirM    = t.match(/\b(North(?:east|west)?|South(?:east|west)?|East|West)\s+winds?/i);
-        const speed = rangeM ? `${rangeM[1]}–${rangeM[2]} mph`
-                   : singleM ? `${singleM[1]} mph` : '';
-        const windText = speed ? (dirM ? `${dirM[1]} ${speed}` : speed) : '';
-        const gustText = gustM ? `gusts to ${gustM[1]} mph` : '';
-        return { windText, gustText };
-      };
-      for (const f of alerts) {
-        const p = f.properties || {};
-        const event = p.event || '';
-        if (!/wind|gale|storm warning/i.test(event)) continue;
-        const start = new Date(p.onset || p.effective);
-        const end   = new Date(p.expires || p.ends);
-        if (isNaN(start) || isNaN(end)) continue;
-        const whatMatch = (p.description || '').match(/\*\s*WHAT[.\s]*\.([\s\S]*?)(?=\n\*|\n\n|$)/i);
-        const what = whatMatch ? whatMatch[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : '';
-        const { windText, gustText } = parseAlertWind(what);
-        _activeWindAlert = { event, start, end, windText, gustText };
-        break;
-      }
-      if (typeof renderSummary === 'function') renderSummary();
-
       if (!alerts.length) { banner.innerHTML = ''; return; }
 
       banner.innerHTML = alerts.map(f => {
