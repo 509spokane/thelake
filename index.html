@@ -1907,8 +1907,8 @@
         const gustPart = maxGust > 10 ? `, gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}` : '';
         const windSentence = `Wind averaging ${hl(avgWind + ' mph')}${gustPart}.`;
 
-        // ── Wind advisory overlay (shaded region for active NWS wind alert) ──
-        let advisoryBg = '', advisoryFg = '';
+        // ── Wind advisory overlay: thin HTML band above the chart spanning the alert window ──
+        let advisoryHTML = '';
         if (typeof _activeWindAlert !== 'undefined' && _activeWindAlert) {
           const tStart = slots[0].t.getTime();
           const tEnd   = slots[slots.length - 1].t.getTime();
@@ -1917,32 +1917,26 @@
           if (aEnd > aStart && tEnd > tStart) {
             const xTo = t => wpadL + ((t - tStart) / (tEnd - tStart)) * (wsvgW - wpadL - wpadR);
             const x1 = xTo(aStart), x2 = xTo(aEnd);
-            const ry = 0, rh = wsvgH - wpadB;
-            advisoryBg = `<rect x="${x1}" y="${ry}" width="${x2 - x1}" height="${rh}" fill="rgba(220,140,30,0.16)" stroke="rgba(220,140,30,0.45)" stroke-width="1"/>`;
-            const cx = (x1 + x2) / 2;
-            const fs = Math.round(12 * _svgScale);
-            const subFs = Math.round(11 * _svgScale);
-            const parts = [];
+            const leftPct  = (x1 / wsvgW) * 100;
+            const widthPct = ((x2 - x1) / wsvgW) * 100;
+            const parts = [`⚠ ${_activeWindAlert.event}`];
             if (_activeWindAlert.windText) parts.push(_activeWindAlert.windText);
             if (_activeWindAlert.gustText) parts.push(_activeWindAlert.gustText);
-            advisoryFg = `<text x="${cx}" y="${fs + 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="rgba(255,180,80,0.95)" font-family="sans-serif">⚠ ${_activeWindAlert.event}</text>`;
-            if (parts.length) {
-              advisoryFg += `<text x="${cx}" y="${fs + 2 + subFs + 3}" text-anchor="middle" font-size="${subFs}" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${parts.join(' · ')}</text>`;
-            }
+            advisoryHTML = `<div style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:visible">${parts.join(' · ')}</div>`;
           }
         }
 
-        const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
+        const chartSvg = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
           `<stop offset="100%" stop-color="rgba(47,116,164,0.05)"/>` +
           `</linearGradient></defs>` +
-          advisoryBg +
           dayLines +
           `<path d="${wfill}" fill="url(#wg)"/>` +
           `<path d="${wcurve}" fill="none" stroke="rgba(80,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-          windyDots +
-          advisoryFg + `</svg>` +
+          windyDots + `</svg>`;
+
+        const windChart = `<div style="position:relative;${advisoryHTML ? 'padding-top:26px;' : ''}">${advisoryHTML}${chartSvg}</div>` +
           `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
 
         blocks.push(`<div style="margin-top:36px;margin-bottom:24px"><div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>${windChart}</div>`);
