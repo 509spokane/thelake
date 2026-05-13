@@ -1919,10 +1919,8 @@
             const x1 = xTo(aStart), x2 = xTo(aEnd);
             const leftPct  = (x1 / wsvgW) * 100;
             const widthPct = ((x2 - x1) / wsvgW) * 100;
-            const parts = [`⚠ ${_activeWindAlert.event}`];
-            if (_activeWindAlert.windText) parts.push(_activeWindAlert.windText);
-            if (_activeWindAlert.gustText) parts.push(_activeWindAlert.gustText);
-            advisoryHTML = `<div style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:visible">${parts.join(' · ')}</div>`;
+            const nwsUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
+            advisoryHTML = `<a href="${nwsUrl}" target="_blank" rel="noopener" style="position:absolute;top:0;left:${leftPct}%;width:${widthPct}%;padding:3px 6px;background:rgba(220,140,30,0.22);border:1px solid rgba(220,140,30,0.55);border-radius:4px;font-size:calc(11px * var(--fs));color:rgba(255,210,150,0.98);font-weight:600;white-space:nowrap;text-align:center;box-sizing:border-box;overflow:hidden;text-decoration:none">⚠ ${_activeWindAlert.event}</a>`;
           }
         }
 
