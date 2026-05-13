@@ -2172,9 +2172,8 @@
         const whatMatch = (p.description || '').match(/\*\s*WHAT[.\s]*\.([\s\S]*?)(?=\n\*|\n\n|$)/i);
         const what = whatMatch ? whatMatch[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : '';
 
-        // Link to NWS details
-        const nwsUrl = `https://forecast.weather.gov/showsigwx.php?warntype=&warnyear=&warnmonth=&warnday=&warnnum=&wfo=OTX`;
-        const detailUrl = p['@id'] || nwsUrl;
+        // Link to the public NWS forecast page for this location (shows active alerts)
+        const detailUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
 
         return `<div style="margin-top:10px;padding:8px 14px;background:rgba(220,140,30,0.15);border:1px solid rgba(220,140,30,0.4);border-radius:8px;text-align:center">
           <a href="${detailUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
