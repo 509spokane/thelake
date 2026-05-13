@@ -2013,7 +2013,7 @@
     }
 
     if (blocks.length) {
-      el.innerHTML = blocks.join('');
+      el.innerHTML = blocks.join('<hr style="border:none;border-top:1px solid rgba(126,200,227,0.35);margin:0">');
       const section = document.getElementById('summarySection');
       if (section) section.style.display = 'block';
       updateSourceLabels();
