@@ -48,3 +48,4 @@
 {"recorded_at":"2026-05-16T06:27:44.261Z","date":"2026-05-15","hour":23,"type":"wind_alert","predicted_wind_mph":8,"predicted_gust_mph":23,"predicted_source":"openmeteo","obs_time":"2026-05-16T06:27:41Z","temp_f":49.6,"wind_mph":8.9,"gust_mph":10.3,"wind_dir_deg":200,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-05-16T13:46:46.010Z","date":"2026-05-16","hour":6,"type":"morning_low","obs_time":"2026-05-16T13:46:34Z","temp_f":42.4,"wind_mph":1.8,"gust_mph":4.5,"wind_dir_deg":175,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-05-16T17:11:06.159Z","date":"2026-05-16","hour":10,"type":"random","obs_time":"2026-05-16T17:10:57Z","temp_f":50,"wind_mph":0,"gust_mph":2.2,"wind_dir_deg":196,"humidity":10,"precip_today_in":0}
+{"recorded_at":"2026-05-16T21:55:56.956Z","date":"2026-05-16","hour":14,"type":"afternoon_high","obs_time":"2026-05-16T21:55:50Z","temp_f":47.3,"wind_mph":2,"gust_mph":3.4,"wind_dir_deg":209,"humidity":10,"precip_today_in":0.12}
