@@ -662,9 +662,13 @@
       document.getElementById('elevValue').innerHTML = `${elevMatch[1]}<em>ft</em>`;
       document.getElementById('elevMeta').textContent = `above sea level · midnight ${elevMatch[2]}`;
     }
+    const currentElev = elevMatch ? parseFloat(elevMatch[1]) : null;
 
     const allDates = [...plain.matchAll(/\b(\d{1,2}\/\d{1,2})\b/g)].map(m => m[1]);
-    const allElevs = [...plain.matchAll(/\b(12[4-9]\d\.\d)\b/g)].map(m => parseFloat(m[1]));
+    let allElevs = [...plain.matchAll(/\b(12[0-9]\d\.\d)\b/g)].map(m => parseFloat(m[1]));
+    // The prose paragraph's current-elevation appears first in the page; drop it
+    // so the remaining elevs line up with the forecast date row in the table.
+    if (currentElev != null && allElevs[0] === currentElev) allElevs = allElevs.slice(1);
     const dates    = extractForecastDates(allDates);
     const elevs    = allElevs.slice(0, dates.length);
 
@@ -686,10 +690,11 @@
   }
 
   function extractForecastDates(all) {
-    // Find the longest consecutive run (up to 14 days) to capture historical + forecast dates
+    // Find the longest consecutive run (up to 14 days) to capture historical + forecast dates.
+    // USBR sometimes publishes fewer than 10 forecast days, so accept runs as short as 5.
     let best = [];
     for (let i = 0; i < all.length; i++) {
-      for (let len = 14; len >= 10; len--) {
+      for (let len = 14; len >= 5; len--) {
         if (i + len > all.length) continue;
         const run = all.slice(i, i + len);
         if (isConsecutiveDates(run)) {
@@ -698,11 +703,11 @@
         }
       }
     }
-    if (best.length >= 10) return best;
+    if (best.length >= 5) return best;
     const seen = new Set(), unique = [];
     for (const d of all) {
       if (!seen.has(d)) { seen.add(d); unique.push(d); }
-      if (unique.length === 10) break;
+      if (unique.length === 14) break;
     }
     return unique;
   }
