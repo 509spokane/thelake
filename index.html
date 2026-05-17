@@ -111,6 +111,16 @@
     }
     .elev-compact-value em { font-style: normal; font-size: calc(14px * var(--fs)); color: #4db8e8; margin-left: 3px; }
     .elev-compact-meta { font-size: calc(11px * var(--fs)); color: #4a7a96; }
+    .elev-stale {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: calc(10px * var(--fs));
+      color: #f4b860;
+      background: rgba(244,184,96,0.12);
+      border: 1px solid rgba(244,184,96,0.3);
+    }
 
     /* Shared card shell */
     .card {
@@ -660,7 +670,13 @@
     const elevMatch = plain.match(/elevation of Lake Roosevelt was ([\d.]+) feet above sea level at midnight on ([A-Za-z]+ \d+, \d{4})/i);
     if (elevMatch) {
       document.getElementById('elevValue').innerHTML = `${elevMatch[1]}<em>ft</em>`;
-      document.getElementById('elevMeta').textContent = `above sea level · midnight ${elevMatch[2]}`;
+      const dataDate = new Date(elevMatch[2]);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const daysOld = Math.floor((today - dataDate) / 86400000);
+      const staleBadge = daysOld >= 2
+        ? ` <span class="elev-stale" title="USBR has not published a newer reading">⚠ ${daysOld} days old</span>`
+        : '';
+      document.getElementById('elevMeta').innerHTML = `above sea level · midnight ${elevMatch[2]}${staleBadge}`;
     }
     const currentElev = elevMatch ? parseFloat(elevMatch[1]) : null;
 
