@@ -696,11 +696,17 @@
     document.getElementById('fetchedAt').textContent = 'Updated ' + new Date().toLocaleString();
 
     mergeAndRender();
-    // Re-render the water level background grid now that lake data is available
+    // Re-render the water level background grid now that lake data is available.
+    // Cover every forecast source so switching providers doesn't strand the chart
+    // without elevations.
     if (_forecastSource === 'weatherapi' && _weatherAPIData) {
       renderWeatherAPIForecastWaterLevelBg(_weatherAPIData);
-    } else if (_forecastSource === 'nws' && _wxDayMap) {
+    } else if (_forecastSource === 'nws' && _wxDayMap && Object.keys(_wxDayMap).length) {
       mergeAndRenderWaterLevelBg();
+    } else if (_forecastSource === 'openmeteo' && _omData) {
+      renderOpenMeteoForecastWaterLevelBg(_omData);
+    } else if (_forecastSource === 'openweather' && typeof _openWeatherData !== 'undefined' && _openWeatherData) {
+      renderOpenWeatherForecastWaterLevelBg(_openWeatherData);
     }
     renderSummary(); // re-render summary now that lake levels are available
   }
