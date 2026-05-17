@@ -1323,6 +1323,12 @@
     grid.innerHTML = '';
     const todayKey = (() => { const t = new Date(); return `${t.getMonth()+1}/${t.getDate()}`; })();
 
+    // Most recent known elevation — used as fallback when USBR's published range
+    // doesn't cover a specific day (their forecast often ends before today).
+    const lastKnownElev = (_lakeDays && _lakeDays.elevs && _lakeDays.elevs.length)
+      ? _lakeDays.elevs[_lakeDays.elevs.length - 1]
+      : null;
+
     // Build historical prefix: up to 4 days before the first forecast date
     const histCols = [];
     if (_showHistoricWaterLevels && _lakeDays && dates.length) {
@@ -1335,17 +1341,18 @@
         if (!dates.includes(key)) {
           const dayName = d.toLocaleDateString([], {weekday:'short'});
           const idx = _lakeDays.dates.indexOf(key);
-          const elev = idx >= 0 ? _lakeDays.elevs[idx] : null;
+          const elev = idx >= 0 ? _lakeDays.elevs[idx] : lastKnownElev;
           if (elev !== null) histCols.push({ date: key, dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1), elev, hist: true });
         }
       }
     }
 
-    // Forecast elevations
+    // Forecast elevations — fall back to most recent known value when USBR's
+    // data doesn't extend to the requested date.
     const fcElevs = dates.map(d => {
       if (!_lakeDays) return null;
       const idx = _lakeDays.dates.indexOf(d);
-      return idx >= 0 ? _lakeDays.elevs[idx] : null;
+      return idx >= 0 ? _lakeDays.elevs[idx] : lastKnownElev;
     });
 
     // Compute scale across all elevations (historical + forecast)
