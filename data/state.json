@@ -1,16 +1,8 @@
 {
-  "day": "2026-05-17",
-  "morning_done": true,
-  "afternoon_done": true,
-  "wind_alerts": [
-    {
-      "hour": 20,
-      "predicted_wind_mph": 12,
-      "predicted_gust_mph": 25,
-      "source": "openmeteo",
-      "checked": true
-    }
-  ],
-  "random_hour": 13,
+  "day": "2026-05-18",
+  "morning_done": false,
+  "afternoon_done": false,
+  "wind_alerts": [],
+  "random_hour": null,
   "random_done": false
 }
