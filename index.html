@@ -288,12 +288,14 @@
       padding: 12px 4px 0; position: relative; z-index: 2;
     }
     .wl-r { display: flex; align-items: center; justify-content: center; width: 100%; }
+    .wl-r-elev { padding: 0 0 6px; }
     .wl-r-day  { padding: 0 0 3px; }
     .wl-r-date { padding: 0 0 14px; }
     .wl-r-high { padding: 0 0 20px; }
     .wl-r-low  { padding: 0 0 10px; }
     .wl-r-wind { padding: 0 0 10px; }
     .wl-r-rain { padding: 0; }
+    .wl-elev { font-size: calc(13px * var(--fs)); font-weight: 700; color: #7ec8e3; letter-spacing: 0.02em; }
     .wl-day  { font-size: calc(13px * var(--fs)); font-weight: 800; color: #ffffff; }
     .wl-date { font-size: calc(8px * var(--fs)); color: #5a9ec0; }
     .wl-high { font-size: calc(15px * var(--fs)); font-weight: 600; color: #f0c878; }
@@ -1409,6 +1411,7 @@
       col.style.opacity = '0.6';
       col.innerHTML = `
         <div class="wl-rows" style="flex:1">
+          <div class="wl-r wl-r-elev"><span class="wl-elev">${h.elev != null ? h.elev.toFixed(1) + "'" : '—'}</span></div>
           <div class="wl-r wl-r-day"><span class="wl-day">${h.dayName}</span></div>
           <div class="wl-r wl-r-date"><span class="wl-date">${h.date}</span></div>
         </div>
@@ -1451,6 +1454,7 @@
 
       col.innerHTML = `
         <div class="wl-rows" style="${warmBg};position:relative">
+          <div class="wl-r wl-r-elev"><span class="wl-elev">${elev != null ? elev.toFixed(1) + "'" : '—'}</span></div>
           <div class="wl-r wl-r-day">
             <span class="wl-day" ${dayStyle}>${dayNames[i]}</span>
           </div>
@@ -2009,7 +2013,7 @@
           }
         }
         // Mini water level SVG curve chart
-        const wlW = 560, wlH = Math.round(64 * _svgScale), wlPadL = 2, wlPadR = 2, wlPadT = Math.round(14 * _svgScale), wlPadB = Math.round(18 * _svgScale);
+        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = 2, wlPadR = 2, wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
         const wlN = elevs.length;
         const wlMin = Math.min(...elevs) - 0.2;
         const wlMax = Math.max(...elevs) + 0.2;
@@ -2040,8 +2044,11 @@
           const dotR = isToday ? 4 : 2.5;
           const labelColor = isToday ? 'rgba(255,255,255,0.9)' : 'rgba(120,180,220,0.55)';
           const labelWeight = isToday ? '700' : '400';
-          // Today: show elevation above dot
-          const elevLabel = isToday ? `<text x="${x}" y="${y - 7}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="700" fill="rgba(255,255,255,0.85)" font-family="sans-serif">${v}'</text>` : '';
+          // Show elevation value above every dot; emphasize today
+          const elevFontSize = Math.round((isToday ? 15 : 13) * _svgScale);
+          const elevFill = isToday ? 'rgba(255,255,255,0.95)' : 'rgba(230,240,250,0.95)';
+          const elevWeight = isToday ? '700' : '600';
+          const elevLabel = `<text x="${x}" y="${y - 9}" text-anchor="middle" font-size="${elevFontSize}" font-weight="${elevWeight}" fill="${elevFill}" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${v.toFixed(1)}'</text>`;
           return `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotColor}"/>` +
                  elevLabel +
                  `<text x="${x}" y="${wlH - 4}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="${labelWeight}" fill="${labelColor}" font-family="sans-serif">${isToday ? 'Today' : dayPart}</text>`;
