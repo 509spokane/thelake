@@ -681,14 +681,29 @@
       document.getElementById('elevMeta').innerHTML = `above sea level · midnight ${elevMatch[2]}${staleBadge}`;
     }
     const currentElev = elevMatch ? parseFloat(elevMatch[1]) : null;
+    const currentDateMd = (() => {
+      if (!elevMatch) return null;
+      const d = new Date(elevMatch[2]);
+      if (isNaN(d.getTime())) return null;
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    })();
 
     const allDates = [...plain.matchAll(/\b(\d{1,2}\/\d{1,2})\b/g)].map(m => m[1]);
     let allElevs = [...plain.matchAll(/\b(12[0-9]\d\.\d)\b/g)].map(m => parseFloat(m[1]));
     // The prose paragraph's current-elevation appears first in the page; drop it
     // so the remaining elevs line up with the forecast date row in the table.
     if (currentElev != null && allElevs[0] === currentElev) allElevs = allElevs.slice(1);
-    const dates    = extractForecastDates(allDates);
-    const elevs    = allElevs.slice(0, dates.length);
+    let dates  = extractForecastDates(allDates);
+    let elevs  = allElevs.slice(0, dates.length);
+
+    // The prose carries a real measurement for a date USBR's table usually
+    // doesn't include (the table typically starts the day after). Prepend it
+    // so historical-day lookups can find that value instead of being filled
+    // in by a "last-known" guess.
+    if (currentDateMd && currentElev != null && !dates.includes(currentDateMd)) {
+      dates = [currentDateMd, ...dates];
+      elevs = [currentElev, ...elevs];
+    }
 
     _lakeDays = { dates, elevs };
     updateHeaderStats();
