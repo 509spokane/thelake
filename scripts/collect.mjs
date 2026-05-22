@@ -29,10 +29,13 @@ const RANDOM_CHECK_MIN_HOUR = 8;       // earliest random check hour (PT)
 const RANDOM_CHECK_MAX_HOUR = 22;      // latest random check hour (PT)
 
 const FILES = {
-  forecasts: 'data/forecasts.jsonl',
-  actuals:   'data/actuals.jsonl',
-  state:     'data/state.json',
+  forecasts:   'data/forecasts.jsonl',
+  actuals:     'data/actuals.jsonl',
+  lakeActuals: 'data/lake_actuals.jsonl',
+  state:       'data/state.json',
 };
+
+const LAKE_URL = 'https://www.usbr.gov/pn/grandcoulee/lakelevel/';
 
 // ── Time helpers ───────────────────────────────────────────────────
 function pacificParts(d = new Date()) {
@@ -165,6 +168,39 @@ async function fetchNWS() {
   return { source: 'nws', daily, hourlyToday: [] };
 }
 
+async function fetchLakeProseReading() {
+  const r = await fetch(LAKE_URL);
+  if (!r.ok) throw new Error('usbr ' + r.status);
+  const html = await r.text();
+  const plain = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+  const m = plain.match(/elevation of Lake Roosevelt was ([\d.]+) feet above sea level at midnight on ([A-Za-z]+ \d+, \d{4})/i);
+  if (!m) return null;
+  const elev = parseFloat(m[1]);
+  const d = new Date(m[2]);
+  if (isNaN(d.getTime())) return null;
+  return { date: d.toISOString().slice(0, 10), elevation_ft: elev };
+}
+
+async function captureLakeActualIfNew(now) {
+  const reading = await safe('usbr', fetchLakeProseReading);
+  if (!reading) return;
+  // Idempotent: skip if a record for this date already exists. The hourly cron
+  // hits this code several times per day; only one record per measurement date.
+  try {
+    const existing = fs.readFileSync(FILES.lakeActuals, 'utf8').split('\n');
+    for (const line of existing) {
+      if (!line.trim()) continue;
+      try { if (JSON.parse(line).date === reading.date) return; } catch {}
+    }
+  } catch { /* file doesn't exist yet */ }
+  appendJsonl(FILES.lakeActuals, {
+    captured_at: now.toISOString(),
+    date: reading.date,
+    elevation_ft: reading.elevation_ft,
+  });
+  console.log(`→ captured lake actual: ${reading.date} = ${reading.elevation_ft}'`);
+}
+
 async function fetchWU() {
   const url = `https://api.weather.com/v2/pws/observations/current?stationId=${STATION}&format=json&units=e&numericPrecision=decimal&apiKey=${WUNDERGROUND_KEY}`;
   const r = await fetch(url);
@@ -208,6 +244,10 @@ async function main() {
   }
 
   console.log(`Pacific ${pstDate} ${pstHour}:00 — state day=${state.day}`);
+
+  // Lake-level snapshot runs every hour but only writes when USBR's prose
+  // reports a date we haven't recorded yet.
+  await captureLakeActualIfNew(now);
 
   // Morning routine — 06:00–08:59 PT (window to handle GitHub Actions cron delays)
   if (pstHour >= 6 && pstHour <= 8 && !state.morning_done) {

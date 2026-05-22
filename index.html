@@ -420,6 +420,7 @@
       Source: <span id="forecastSourceLabel">NWS · weather.gov</span>
       &nbsp;·&nbsp;<a href="#" class="source-change-link" onclick="toggleSourcePicker('forecastPicker');return false">Change</a>
       <div id="forecastPicker" class="inline-source-picker" style="display:none"></div>
+      <div style="margin-top:4px">Water level: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank" rel="noopener">USBR · Grand Coulee</a></div>
     </div>
   </div>
 
@@ -565,6 +566,7 @@
 
   // ── Shared state for merge ─────────────────────────────────
   let _lakeDays = null;   // { dates[], elevs[] }
+  let _lakeActuals = new Map(); // "M/D" -> elevation_ft, loaded from data/lake_actuals.jsonl
   let _wxDayMap = null;   // { "4/25": { icon, desc, high, low, wind, gust } }
   let _omData = null;     // Open-Meteo daily data
 
@@ -656,6 +658,26 @@
   // ── Lake level ────────────────────────────────────────────
   const LAKE_SOURCE = 'https://www.usbr.gov/pn/grandcoulee/lakelevel/';
 
+  async function fetchLakeActuals() {
+    // Daily lake-elevation snapshots written by scripts/collect.mjs. Used to
+    // backfill historical-day columns that USBR's live page no longer covers.
+    try {
+      const r = await fetch('data/lake_actuals.jsonl', { cache: 'no-store' });
+      if (!r.ok) return;
+      const text = await r.text();
+      for (const line of text.split('\n')) {
+        if (!line.trim()) continue;
+        try {
+          const rec = JSON.parse(line);
+          if (!rec.date || typeof rec.elevation_ft !== 'number') continue;
+          const [, m, d] = rec.date.split('-').map(Number);
+          if (!m || !d) continue;
+          _lakeActuals.set(`${m}/${d}`, rec.elevation_ft); // last write wins
+        } catch { /* skip malformed line */ }
+      }
+    } catch { /* file absent on first deploy */ }
+  }
+
   async function fetchLakeData() {
     const html = await proxyFetch(LAKE_SOURCE);
     if (!html) {
@@ -703,6 +725,28 @@
     if (currentDateMd && currentElev != null && !dates.includes(currentDateMd)) {
       dates = [currentDateMd, ...dates];
       elevs = [currentElev, ...elevs];
+    }
+
+    // Merge in any historical snapshots the collector has captured. These are
+    // older than USBR's current prose date and aren't published anywhere else.
+    if (_lakeActuals.size) {
+      const map = new Map();
+      dates.forEach((d, i) => map.set(d, elevs[i])); // USBR wins for overlapping dates
+      for (const [md, e] of _lakeActuals) {
+        if (!map.has(md)) map.set(md, e);
+      }
+      const todayMonth = new Date().getMonth() + 1;
+      const todayYear = new Date().getFullYear();
+      const rank = md => {
+        const [m, d] = md.split('/').map(Number);
+        const y = m - todayMonth > 6 ? todayYear - 1
+                : todayMonth - m > 6 ? todayYear + 1
+                : todayYear;
+        return new Date(y, m - 1, d).getTime();
+      };
+      const sorted = [...map.entries()].sort(([a], [b]) => rank(a) - rank(b));
+      dates = sorted.map(([d]) => d);
+      elevs = sorted.map(([, e]) => e);
     }
 
     _lakeDays = { dates, elevs };
@@ -2202,7 +2246,7 @@
   }
 
   // ── Boot ──────────────────────────────────────────────────
-  fetchLakeData();
+  fetchLakeActuals().then(fetchLakeData);
   fetchWeatherAPI();
   fetchWeather();     // NWS (default source)
   fetchWind();        // Open-Meteo wind
