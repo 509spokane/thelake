@@ -1,51 +1,8 @@
 {
-  "day": "2026-05-25",
-  "morning_done": true,
-  "afternoon_done": true,
-  "wind_alerts": [
-    {
-      "hour": 13,
-      "predicted_wind_mph": 14,
-      "predicted_gust_mph": 24,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 14,
-      "predicted_wind_mph": 14,
-      "predicted_gust_mph": 27,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 15,
-      "predicted_wind_mph": 13,
-      "predicted_gust_mph": 28,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 20,
-      "predicted_wind_mph": 10,
-      "predicted_gust_mph": 30,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 21,
-      "predicted_wind_mph": 17,
-      "predicted_gust_mph": 41,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 22,
-      "predicted_wind_mph": 16,
-      "predicted_gust_mph": 36,
-      "source": "openmeteo",
-      "checked": false
-    }
-  ],
-  "random_hour": 11,
+  "day": "2026-05-26",
+  "morning_done": false,
+  "afternoon_done": false,
+  "wind_alerts": [],
+  "random_hour": null,
   "random_done": false
 }
