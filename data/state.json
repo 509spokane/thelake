@@ -29,14 +29,14 @@
       "predicted_wind_mph": 10,
       "predicted_gust_mph": 30,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 21,
       "predicted_wind_mph": 17,
       "predicted_gust_mph": 41,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 22,
