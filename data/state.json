@@ -1,8 +1,8 @@
 {
-  "day": "2026-06-14",
+  "day": "2026-06-15",
   "morning_done": true,
-  "afternoon_done": true,
+  "afternoon_done": false,
   "wind_alerts": [],
-  "random_hour": 17,
-  "random_done": true
+  "random_hour": 21,
+  "random_done": false
 }
