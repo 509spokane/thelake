@@ -1,8 +1,30 @@
 {
   "day": "2026-06-28",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [],
-  "random_hour": null,
+  "wind_alerts": [
+    {
+      "hour": 19,
+      "predicted_wind_mph": 10,
+      "predicted_gust_mph": 24,
+      "source": "openmeteo",
+      "checked": false
+    },
+    {
+      "hour": 21,
+      "predicted_wind_mph": 2,
+      "predicted_gust_mph": 24,
+      "source": "openmeteo",
+      "checked": false
+    },
+    {
+      "hour": 22,
+      "predicted_wind_mph": 10,
+      "predicted_gust_mph": 24,
+      "source": "openmeteo",
+      "checked": false
+    }
+  ],
+  "random_hour": 8,
   "random_done": false
 }
