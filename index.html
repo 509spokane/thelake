@@ -1874,7 +1874,7 @@
       }
 
       // ── SVG curve chart: 10-day high temps ──
-      const svgW = 560, svgH = Math.round(70 * _svgScale), padL = 2, padR = 2, padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
+      const svgW = 560, svgH = Math.round(70 * _svgScale), padL = 30, padR = 30, padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
       const n = highsByDate.length;
       const xOf = i => padL + (i / (n - 1)) * (svgW - padL - padR);
       const yOf = v => padT + (1 - (v - minHigh) / Math.max(1, maxHigh - minHigh)) * (svgH - padT - padB);
