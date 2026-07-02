@@ -1530,11 +1530,19 @@
       grid.appendChild(col);
     });
 
-    // Scroll so 3 historical days are visible to the left of today
+    // Scroll so today is the first visible column; the historical
+    // water-level days stay reachable by scrolling back to the left.
     const todayCol = grid.querySelector('[data-today="true"]');
     if (todayCol) {
-      const colW = 84; // ~78px col + 6px gap
-      requestAnimationFrame(() => { grid.scrollLeft = Math.max(0, todayCol.offsetLeft - (colW * 3)); });
+      const snap = () => {
+        // If the days after today are too narrow to let today reach the
+        // left edge, pad the right end so the scroll can get there.
+        const deficit = todayCol.offsetLeft - (grid.scrollWidth - grid.clientWidth);
+        if (deficit > 0) grid.style.paddingRight = deficit + 'px';
+        grid.scrollLeft = todayCol.offsetLeft;
+      };
+      requestAnimationFrame(snap);
+      setTimeout(snap, 300); // fonts/images finishing layout can shift widths
     }
   }
 
