@@ -1874,7 +1874,7 @@
       }
 
       // ── SVG curve chart: 10-day high temps ──
-      const svgW = 560, svgH = Math.round(70 * _svgScale), padL = 30, padR = 30, padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
+      const svgW = 560, svgH = Math.round(70 * _svgScale), padL = Math.round(32 * _svgScale), padR = Math.round(32 * _svgScale), padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
       const n = highsByDate.length;
       const xOf = i => padL + (i / (n - 1)) * (svgW - padL - padR);
       const yOf = v => padT + (1 - (v - minHigh) / Math.max(1, maxHigh - minHigh)) * (svgH - padT - padB);
@@ -2086,7 +2086,7 @@
           }
         }
         // Mini water level SVG curve chart
-        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = 30, wlPadR = 30, wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
+        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = Math.round(34 * _svgScale), wlPadR = Math.round(34 * _svgScale), wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
         const wlN = elevs.length;
         const wlMin = Math.min(...elevs) - 0.2;
         const wlMax = Math.max(...elevs) + 0.2;
