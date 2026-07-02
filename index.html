@@ -708,7 +708,9 @@
       return `${d.getMonth() + 1}/${d.getDate()}`;
     })();
 
-    const allDates = [...plain.matchAll(/\b(\d{1,2}\/\d{1,2})\b/g)].map(m => m[1]);
+    // Normalize zero-padded USBR dates ("7/02" → "7/2") so they match
+    // todayKey and the _lakeActuals "M/D" keys.
+    const allDates = [...plain.matchAll(/\b(\d{1,2}\/\d{1,2})\b/g)].map(m => m[1].split('/').map(Number).join('/'));
     let allElevs = [...plain.matchAll(/\b(12[0-9]\d\.\d)\b/g)].map(m => parseFloat(m[1]));
     // The prose paragraph's current-elevation appears first in the page; drop it
     // so the remaining elevs line up with the forecast date row in the table.
@@ -2035,15 +2037,28 @@
     if (_lakeDays && _lakeDays.elevs && _lakeDays.elevs.length >= 2) {
       const todayM = today.getMonth() + 1, todayD = today.getDate();
       const todayKey = `${todayM}/${todayD}`;
-      const todayIdx = _lakeDays.dates.indexOf(todayKey);
 
-      // Use all dates but track which is today
-      const filteredDates = _lakeDays.dates;
-      const filteredElevs = _lakeDays.elevs;
-      const elevs = filteredElevs.filter(e => e != null && !isNaN(e));
+      // Window: 2 days back through 5 days ahead of today, anchored to the
+      // calendar so it stays correct even when today has no USBR entry.
+      // Keeps dates and elevations paired while dropping missing values.
+      const wlTodayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      const wlPairs = [];
+      _lakeDays.dates.forEach((md, i) => {
+        const e = _lakeDays.elevs[i];
+        if (e == null || isNaN(e)) return;
+        const [m, d] = md.split('/').map(Number);
+        const y = m - todayM > 6 ? today.getFullYear() - 1
+                : todayM - m > 6 ? today.getFullYear() + 1
+                : today.getFullYear();
+        const diff = Math.round((new Date(y, m - 1, d).getTime() - wlTodayMid) / 86400000);
+        if (diff >= -2 && diff <= 5) wlPairs.push([md, e]);
+      });
+      const wlDates = wlPairs.map(p => p[0]);
+      const elevs = wlPairs.map(p => p[1]);
       if (elevs.length >= 2) {
         // Base change calc on today→last, falling back to first if today not found
-        const todayElev = todayIdx >= 0 && filteredElevs[todayIdx] != null ? filteredElevs[todayIdx] : elevs[0];
+        const wlTodayIdx = wlDates.indexOf(todayKey);
+        const todayElev = wlTodayIdx >= 0 ? elevs[wlTodayIdx] : elevs[0];
         const first = todayElev;
         const last  = elevs[elevs.length - 1];
         const avg   = Math.round((elevs.reduce((a, b) => a + b, 0) / elevs.length) * 10) / 10;
@@ -2071,7 +2086,7 @@
           }
         }
         // Mini water level SVG curve chart
-        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = 2, wlPadR = 2, wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
+        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = 30, wlPadR = 30, wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
         const wlN = elevs.length;
         const wlMin = Math.min(...elevs) - 0.2;
         const wlMax = Math.max(...elevs) + 0.2;
@@ -2087,8 +2102,6 @@
         }
         const wlFill = wlCurve + ` L ${wlPts[wlN-1][0]},${wlH - wlPadB} L ${wlPts[0][0]},${wlH - wlPadB} Z`;
 
-        // Day labels from _lakeDays.dates aligned with elevs
-        const wlDates = (filteredDates || []).slice(0, wlN);
         const wlDotLabels = elevs.map((v, i) => {
           const x = wlXOf(i), y = wlYOf(v);
           const dateStr = wlDates[i] || '';
