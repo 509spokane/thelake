@@ -1,8 +1,8 @@
 {
   "day": "2026-07-10",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
   "wind_alerts": [],
-  "random_hour": null,
+  "random_hour": 12,
   "random_done": false
 }
