@@ -1,7 +1,7 @@
 {
   "day": "2026-07-17",
   "morning_done": true,
-  "afternoon_done": false,
+  "afternoon_done": true,
   "wind_alerts": [],
   "random_hour": 18,
   "random_done": false
