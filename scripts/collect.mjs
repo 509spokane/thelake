@@ -112,14 +112,19 @@ async function fetchWeatherAPI() {
   const r = await fetch(url);
   if (!r.ok) throw new Error('weatherapi ' + r.status);
   const j = await r.json();
-  const daily = j.forecast.forecastday.map(d => ({
-    date: d.date,
-    high_f: Math.round(d.day.maxtemp_f),
-    low_f:  Math.round(d.day.mintemp_f),
-    max_wind_mph: Math.round(d.day.maxwind_mph),
-    max_gust_mph: null, // weatherapi free tier doesn't expose daily gust max
-    precip_chance: d.day.daily_chance_of_rain ?? null,
-  }));
+  const daily = j.forecast.forecastday.map(d => {
+    // The daily block has no gust max, but every hourly record carries
+    // gust_mph, so derive the day's peak from those.
+    const gusts = (d.hour || []).map(h => h.gust_mph).filter(v => typeof v === 'number');
+    return {
+      date: d.date,
+      high_f: Math.round(d.day.maxtemp_f),
+      low_f:  Math.round(d.day.mintemp_f),
+      max_wind_mph: Math.round(d.day.maxwind_mph),
+      max_gust_mph: gusts.length ? Math.round(Math.max(...gusts)) : null,
+      precip_chance: d.day.daily_chance_of_rain ?? null,
+    };
+  });
   const hourlyToday = (j.forecast.forecastday[0]?.hour || []).map(h => ({
     hour: parseInt(h.time.slice(11, 13), 10),
     wind_mph: Math.round(h.wind_mph),
@@ -139,6 +144,9 @@ async function fetchNWS() {
   const fc = await fetch(fcUrl, {
     headers: { 'User-Agent': 'thelake-collector (github.com/509spokane/thelake)' },
   }).then(r => r.json());
+
+  // Gusts live in the raw gridpoint data, not the day/night periods above.
+  const gustByDate = await fetchNWSGustsByDate(points?.properties?.forecastGridData);
   // Periods alternate day/night. Group by date in Pacific tz.
   const byDate = new Map();
   for (const p of fc.properties.periods) {
@@ -162,10 +170,59 @@ async function fetchNWS() {
     high_f: v.high_f,
     low_f: v.low_f,
     max_wind_mph: v.max_wind_mph || null,
-    max_gust_mph: null,
+    max_gust_mph: gustByDate.get(date) ?? null,
     precip_chance: v.precip_chance,
   }));
   return { source: 'nws', daily, hourlyToday: [] };
+}
+
+// Peak gust per Pacific calendar day, from the NWS gridpoint windGust product.
+// Values are intervals ("2026-07-22T22:00:00+00:00/PT3H"), so each one is
+// expanded across the hours it covers before bucketing into local days.
+// Returns an empty map on any failure — a missing gust is recorded as null
+// rather than blocking the rest of the NWS forecast.
+async function fetchNWSGustsByDate(gridUrl) {
+  const byDate = new Map();
+  if (!gridUrl) return byDate;
+  try {
+    const grid = await fetch(gridUrl, {
+      headers: { 'User-Agent': 'thelake-collector (github.com/509spokane/thelake)' },
+    }).then(r => r.json());
+    const gust = grid?.properties?.windGust;
+    const values = gust?.values || [];
+    if (!values.length) return byDate;
+
+    // Don't assume the unit — NWS reports km/h here, but say so explicitly.
+    const uom = gust.uom || '';
+    let toMph;
+    if (uom.includes('km_h')) toMph = v => v * 0.621371;
+    else if (uom.includes('m_s')) toMph = v => v * 2.236936;
+    else if (uom.includes('mi_h')) toMph = v => v;
+    else { console.warn(`nws windGust: unrecognized uom "${uom}", skipping gusts`); return byDate; }
+
+    const dayFmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit',
+    });
+
+    for (const { validTime, value } of values) {
+      if (value == null) continue;
+      const [startStr, durStr] = String(validTime).split('/');
+      const start = new Date(startStr);
+      if (isNaN(start)) continue;
+      const d = /P(?:(\d+)D)?(?:T(?:(\d+)H)?)?/.exec(durStr || '') || [];
+      const hours = (parseInt(d[1] || 0, 10) * 24) + parseInt(d[2] || 0, 10) || 1;
+      const mph = toMph(value);
+      for (let h = 0; h < hours; h++) {
+        const date = dayFmt.format(new Date(start.getTime() + h * 3600000));
+        const prev = byDate.get(date);
+        if (prev == null || mph > prev) byDate.set(date, mph);
+      }
+    }
+    for (const [date, mph] of byDate) byDate.set(date, Math.round(mph));
+  } catch (e) {
+    console.warn('nws gust fetch failed:', e.message);
+  }
+  return byDate;
 }
 
 async function fetchLakeProseReading() {

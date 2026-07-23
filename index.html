@@ -1924,7 +1924,9 @@
         const windDeg = dirMap[p.windDirection] ?? 0;
         const precip = p.probabilityOfPrecipitation?.value ?? 0;
         const utcKey = t.toISOString().slice(0, 13);
-        const gustMph = gustMap.get(utcKey) ?? windMph;
+        // No gust value for this hour means NWS isn't forecasting one — show
+        // nothing rather than echoing the sustained wind as if it were a gust.
+        const gustMph = gustMap.get(utcKey) ?? null;
 
         hourlyData.time.push(timeStr);
         hourlyData.wind_speed_10m.push(windMph);
@@ -2133,7 +2135,7 @@
       const slots = _hourlyData.time.map((t, i) => ({
         t: new Date(t.replace(' ', 'T')),
         spd: _hourlyData.wind_speed_10m[i],
-        gust: _hourlyData.wind_gusts_10m[i]
+        gust: _hourlyData.wind_gusts_10m[i] ?? 0   // a source may not forecast gusts for every hour
       })).filter(x => x.t >= now).slice(0, 48);
 
       if (slots.length) {
