@@ -430,29 +430,81 @@ function renderWindAlerts(actuals) {
   const el = document.getElementById('windAlerts');
   const alerts = actuals.filter(a => a.type === 'wind_alert');
   if (!alerts.length) return;
+
+  const r1 = v => v == null ? null : Math.round(v * 10) / 10;   // subtraction of decimals
+  const windGaps = alerts.filter(a => a.predicted_wind_mph != null && a.wind_mph != null)
+                         .map(a => a.predicted_wind_mph - a.wind_mph);
+  const gustGaps = alerts.filter(a => a.predicted_gust_mph != null && a.gust_mph != null)
+                         .map(a => a.predicted_gust_mph - a.gust_mph);
+  // "Did it actually blow?" — the alert threshold is 18 mph wind / 23 mph gust.
+  const materialised = alerts.filter(a => (a.wind_mph ?? 0) >= 18 || (a.gust_mph ?? 0) >= 23).length;
+
+  const sourcesUsed = [...new Set(alerts.map(a => a.predicted_source))];
+  const oneSource = sourcesUsed.length === 1;
+
+  let summary = '';
+  if (windGaps.length) {
+    const mw = r1(mean(windGaps)), mg = gustGaps.length ? r1(mean(gustGaps)) : null;
+    const dir = v => v > 0 ? 'over' : 'under';
+    summary =
+      `<div class="verdict" style="font-size:14px">` +
+      `When a windy hour was flagged, the forecast ${dir(mw)}-predicted the wind by ` +
+      `<strong>${Math.abs(mw).toFixed(1)} mph</strong> on average` +
+      (mg != null ? ` and the gusts by <strong>${Math.abs(mg).toFixed(1)} mph</strong>` : '') + `. ` +
+      `Only <strong>${materialised} of ${alerts.length}</strong> flagged hours actually reached ` +
+      `18&nbsp;mph wind or 23&nbsp;mph gusts at the dock.` +
+      (oneSource
+        ? `<div class="today-note">Every alert so far was raised by ${fmtSrc(sourcesUsed[0])} — the collector logs only the single highest gust forecast for each hour, so this section can't compare sources yet.</div>`
+        : '') +
+      `</div>`;
+  }
+
   const rows = alerts.slice(-20).reverse().map(a => {
-    const dWind = a.predicted_wind_mph != null && a.wind_mph != null ? a.wind_mph - a.predicted_wind_mph : null;
-    const dGust = a.predicted_gust_mph != null && a.gust_mph != null ? a.gust_mph - a.predicted_gust_mph : null;
-    const fmt = (v) => v == null ? '—' : `<span class="${v > 0 ? 'delta-neg' : v < 0 ? 'delta-pos' : 'delta-zero'}">${v > 0 ? '+' : ''}${v}</span>`;
+    const dWind = r1(a.predicted_wind_mph != null && a.wind_mph != null ? a.wind_mph - a.predicted_wind_mph : null);
+    const dGust = r1(a.predicted_gust_mph != null && a.gust_mph != null ? a.gust_mph - a.predicted_gust_mph : null);
+    const fmt = (v) => v == null ? '—' : `<span class="${v > 0 ? 'delta-pos' : v < 0 ? 'delta-neg' : 'delta-zero'}">${v > 0 ? '+' : ''}${v.toFixed(1)}</span>`;
     return `<tr>
-      <td>${a.date} ${String(a.hour).padStart(2,'0')}:00</td>
-      <td class="src">${fmtSrc(a.predicted_source)}</td>
+      <td>${a.date}<br><span style="color:#4a7a96">${String(a.hour).padStart(2,'0')}:00</span></td>
       <td class="num">${a.predicted_wind_mph ?? '—'} / ${a.predicted_gust_mph ?? '—'}</td>
-      <td class="num">${a.wind_mph ?? '—'} / ${a.gust_mph ?? '—'}</td>
-      <td class="num">wind ${fmt(dWind)}, gust ${fmt(dGust)}</td>
+      <td class="num">${r1(a.wind_mph) ?? '—'} / ${r1(a.gust_mph) ?? '—'}</td>
+      <td class="num">${fmt(dGust)}</td>
     </tr>`;
   }).join('');
-  el.innerHTML = `<table>
-    <thead><tr><th>When</th><th>Source</th><th class="num">Predicted (wind/gust)</th><th class="num">Actual<br>(F-Dock)</th><th class="num">Δ</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+
+  el.innerHTML = summary + `
+    <details class="today-more" style="margin-top:14px">
+      <summary>Every flagged hour (${alerts.length})</summary>
+      <table style="margin-top:8px">
+        <thead><tr>
+          <th>When</th>
+          <th class="num" style="text-align:right">Forecast<br>wind / gust</th>
+          <th class="num" style="text-align:right">F&#8209;Dock<br>wind / gust</th>
+          <th class="num" style="text-align:right">Gust<br>miss</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </details>`;
 }
 
 function renderWorstMisses(errors) {
   const el = document.getElementById('worstMisses');
-  const sorted = [...errors].filter(e => e.err_high != null).sort((a, b) => Math.abs(b.err_high) - Math.abs(a.err_high)).slice(0, 5);
+  const scored = errors.filter(e => e.err_high != null);
+  const sorted = [...scored].sort((a, b) => Math.abs(b.err_high) - Math.abs(a.err_high)).slice(0, 5);
   if (!sorted.length) return;
-  el.innerHTML = `<table>
+
+  // Span of days the comparison covers, so "worst" has a stated context.
+  const dates = [...new Set(scored.map(e => e.target_date))].sort();
+  const spanDays = Math.max(1, Math.round(
+    (new Date(dates[dates.length - 1] + 'T00:00:00Z') - new Date(dates[0] + 'T00:00:00Z')) / 86400000) + 1);
+  const worst = sorted[0];
+
+  el.innerHTML = `<div class="verdict" style="font-size:14px">
+      The five biggest high-temperature misses across the last <strong>${spanDays} days</strong>
+      (${dates.length} days with a dock reading to check against).
+      The worst was ${fmtSrc(worst.src || worst.source)} on ${worst.target_date},
+      off by <strong>${Math.abs(worst.err_high).toFixed(0)}°</strong>.
+    </div>
+    <table>
     <thead><tr><th>Date</th><th>Source</th><th class="num">Days out</th><th class="num">Predicted</th><th class="num">Actual<br>(F-Dock)</th><th class="num">Miss</th></tr></thead>
     <tbody>${sorted.map(e => `
       <tr>
