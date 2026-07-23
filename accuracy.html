@@ -82,6 +82,31 @@
     .decay-row .lab { color: #7ec8e3; }
     .decay-row .val { color: #c8e8f8; font-variant-numeric: tabular-nums; }
 
+    /* Rank colouring within a days-out range */
+    .rank-best  { color: #5fd39b; font-weight: 600; }
+    .rank-mid   { color: #e8a94f; }
+    .rank-worst { color: #e8706e; }
+    .decay-legend { font-size: 11px; color: #5a9ec0; }
+    .decay-legend span { font-weight: 600; }
+
+    /* Plain-English answer at the top of the page */
+    .verdict {
+      font-size: 15px; line-height: 1.6; color: #a8d4ea;
+      margin-bottom: 14px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(77,184,232,0.12);
+    }
+    .verdict strong { color: #fff; }
+
+    .today-actual { font-size: 14px; color: #a8d4ea; margin-bottom: 12px; }
+    .today-actual strong { color: #fff; font-size: 17px; }
+    .today-note { font-size: 11px; color: #5a9ec0; margin-top: 10px; line-height: 1.5; }
+    .today-more { margin-top: 10px; }
+    .today-more summary {
+      cursor: pointer; font-size: 12px; color: #4db8e8; list-style: none;
+    }
+    .today-more summary::before { content: '▸ '; }
+    .today-more[open] summary::before { content: '▾ '; }
+
     footer {
       text-align: center; font-size: 11px; color: #3a6a82; margin-top: 30px;
     }
@@ -96,16 +121,18 @@
   </header>
 
   <div class="card">
-    <div class="section-label">Source Leaderboard · High Temperature</div>
+    <div class="verdict" id="leaderVerdict">Which source predicts the high temperature best?</div>
     <div id="leaderboard"><div class="empty">Collecting data… check back after a few days of measurements.</div></div>
   </div>
 
   <div class="card">
-    <div class="section-label">Today's Predictions vs Latest Reading</div>
+    <div class="section-label">Today's High · Predicted vs Actual</div>
     <div id="todayWidget"><div class="empty">No data yet for today.</div></div>
   </div>
 
-  <div class="card">
+  <!-- Hidden: useful data, but a 5-column table runs off the side of a phone.
+       Kept in the DOM so renderRecentTable() and its markup stay working. -->
+  <div class="card" id="recentCard" style="display:none">
     <div class="section-label">Recent Days · Predicted High vs Actual</div>
     <div id="recentTable"><div class="empty">No completed days to compare yet.</div></div>
   </div>
@@ -233,6 +260,20 @@ function renderLeaderboard(errors) {
   }
   rows.sort((a, b) => a.mae - b.mae);
   if (!rows.length) return;
+
+  // Lead with the answer in plain English instead of a "leaderboard" label.
+  const winner = rows[0];
+  const verdict = document.getElementById('leaderVerdict');
+  if (verdict) {
+    const runnerUp = rows[1];
+    const margin = runnerUp ? (runnerUp.mae - winner.mae) : null;
+    const vsText = runnerUp && margin >= 0.1
+      ? ` — closer than ${fmtSrc(runnerUp.src)} by ${margin.toFixed(1)}° on average`
+      : '';
+    verdict.innerHTML =
+      `<strong>${fmtSrc(winner.src)}</strong> predicts the high temperature best${vsText}. ` +
+      `Over ${winner.n} day${winner.n === 1 ? '' : 's'} it has been off by ${winner.mae.toFixed(1)}° on average.`;
+  }
   el.innerHTML = rows.map((r, i) => {
     const biasText = r.bias > 0 ? `overestimating by avg ${r.bias.toFixed(1)}°` : `underestimating by avg ${Math.abs(r.bias).toFixed(1)}°`;
     return `
@@ -262,22 +303,48 @@ function renderToday(forecasts, actuals) {
   const latestActual = todayActuals.length ? todayActuals[todayActuals.length - 1] : null;
   const actualHigh = todayActuals.filter(a => a.type === 'afternoon_high').map(a => a.temp_f).reduce((m, v) => Math.max(m, v), -Infinity);
   const hasHigh = isFinite(actualHigh);
-  const rows = fcToday.map(f => {
+  // Only the high is verifiable during the day — the dock's overnight low and
+  // peak wind aren't known yet — so the comparison is limited to the high and
+  // the other predictions are shown separately rather than in the same row.
+  const sorted = [...fcToday].sort((a, b) => {
+    const ea = a.high_f != null && hasHigh ? Math.abs(a.high_f - actualHigh) : Infinity;
+    const eb = b.high_f != null && hasHigh ? Math.abs(b.high_f - actualHigh) : Infinity;
+    return ea - eb;
+  });
+  const rows = sorted.map(f => {
     const errH = (f.high_f != null && hasHigh) ? f.high_f - actualHigh : null;
     return `<tr>
       <td class="src">${fmtSrc(f.source)}</td>
       <td class="num">${f.high_f ?? '—'}°</td>
-      <td class="num">${f.low_f ?? '—'}°</td>
-      <td class="num">${f.max_wind_mph ?? '—'} mph</td>
-      <td class="num">${hasHigh ? `${actualHigh}° (${fmtDelta(errH)})` : '—'}</td>
+      <td class="num">${errH != null ? fmtDelta(errH) : '—'}</td>
     </tr>`;
   }).join('');
+  const alsoRows = fcToday.map(f =>
+    `<tr>
+      <td class="src">${fmtSrc(f.source)}</td>
+      <td class="num">${f.low_f ?? '—'}°</td>
+      <td class="num">${f.max_wind_mph ?? '—'} mph</td>
+    </tr>`).join('');
+
   document.getElementById('todayWidget').innerHTML = `
+    <div class="today-actual">
+      ${hasHigh
+        ? `Warmest reading at F&#8209;Dock so far today: <strong>${actualHigh}°</strong>`
+        : `No high reading from F&#8209;Dock yet today.`}
+    </div>
     <table>
-      <thead><tr><th>Source</th><th class="num" style="text-align:right">High</th><th class="num" style="text-align:right">Low</th><th class="num" style="text-align:right">Wind</th><th class="num" style="text-align:right">Actual<br>(F-Dock) High (Δ)</th></tr></thead>
+      <thead><tr><th>Source predicted</th><th class="num" style="text-align:right">High</th><th class="num" style="text-align:right">Off by</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    ${latestActual ? `<div style="margin-top:10px;font-size:11px;color:#5a9ec0">Latest WU reading: ${latestActual.temp_f}°F · ${latestActual.wind_mph} mph wind · ${new Date(latestActual.recorded_at).toLocaleString()}</div>` : ''}
+    <div class="today-note">The high is the only value we can check mid&#8209;day &mdash; tonight's low and the day's peak wind haven't happened yet.</div>
+    <details class="today-more">
+      <summary>Also predicted for today</summary>
+      <table style="margin-top:8px">
+        <thead><tr><th>Source</th><th class="num" style="text-align:right">Low</th><th class="num" style="text-align:right">Wind</th></tr></thead>
+        <tbody>${alsoRows}</tbody>
+      </table>
+    </details>
+    ${latestActual ? `<div style="margin-top:10px;font-size:11px;color:#5a9ec0">Latest dock reading: ${latestActual.temp_f}°F · ${latestActual.wind_mph} mph wind · ${new Date(latestActual.recorded_at).toLocaleString()}</div>` : ''}
   `;
 }
 
@@ -320,15 +387,43 @@ function renderDecay(errors) {
     { label: '6–10 days', test: d => d >= 6 },
   ];
   const sources = [...new Set(errors.map(e => e.source))];
+
+  // Average error per (source, bucket), so each bucket can be ranked on its own.
+  const maeOf = (src, b) => {
+    const arr = errors.filter(e => e.source === src && b.test(e.days_out))
+                      .map(e => Math.abs(e.err_high)).filter(v => v != null);
+    return arr.length ? { mae: mean(arr), n: arr.length } : null;
+  };
+
+  // Rank within each bucket: best green, middle amber, worst red. Ties share a
+  // rank so two sources that are equally close don't get different colours.
+  const rankByBucket = new Map();
+  buckets.forEach(b => {
+    const scored = sources.map(src => ({ src, r: maeOf(src, b) })).filter(x => x.r);
+    const ordered = [...scored].sort((a, b2) => a.r.mae - b2.r.mae);
+    const ranks = new Map();
+    let rank = 0;
+    ordered.forEach((x, i) => {
+      if (i > 0 && x.r.mae > ordered[i - 1].r.mae) rank = i;
+      ranks.set(x.src, ordered.length < 2 ? -1 : rank);
+    });
+    rankByBucket.set(b.label, ranks);
+  });
+  const rankClass = r => r === 0 ? 'rank-best' : r === 1 ? 'rank-mid' : r >= 2 ? 'rank-worst' : '';
+
   const cards = sources.map(src => {
     const rows = buckets.map(b => {
-      const arr = errors.filter(e => e.source === src && b.test(e.days_out)).map(e => Math.abs(e.err_high)).filter(v => v != null);
-      if (!arr.length) return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val">—</span></div>`;
-      return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val">${mean(arr).toFixed(1)}° (n=${arr.length})</span></div>`;
+      const r = maeOf(src, b);
+      if (!r) return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val">—</span></div>`;
+      const cls = rankClass(rankByBucket.get(b.label).get(src));
+      return `<div class="decay-row"><span class="lab">${b.label}</span><span class="val ${cls}">${r.mae.toFixed(1)}° (n=${r.n})</span></div>`;
     }).join('');
     return `<div class="decay-card"><div class="decay-title">${fmtSrc(src)}</div><div class="decay-rows">${rows}</div></div>`;
   }).join('');
-  el.innerHTML = `<div class="decay-grid">${cards}</div>`;
+  el.innerHTML = `
+    <div class="decay-legend">For each range: <span class="rank-best">closest</span> ·
+      <span class="rank-mid">middle</span> · <span class="rank-worst">furthest off</span></div>
+    <div class="decay-grid">${cards}</div>`;
 }
 
 function renderWindAlerts(actuals) {
