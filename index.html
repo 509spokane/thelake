@@ -539,22 +539,28 @@
         <span>Weather Sources</span>
       </button>
       <div id="sourcesContent" class="sources-content">
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;margin-bottom:14px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer">
-            <span><strong>WeatherAPI.com</strong> — High & low temps, hourly wind & gusts · 3-day forecast</span>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;margin-bottom:14px">
+          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer">
+              <span style="font-weight:600"><strong>WeatherAPI.com</strong></span>
+            </div>
+            <span style="margin-left:24px;color:#7ec8e3">Fast and compact with 3 days of forecast. High & low temps, hourly wind & gusts.</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer">
-            <span><strong>Open-Meteo</strong> — Detailed temperature, wind, and precipitation · 10-day forecast</span>
+          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer">
+              <span style="font-weight:600"><strong>Open-Meteo</strong></span>
+            </div>
+            <span style="margin-left:24px;color:#7ec8e3">Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer">
-            <span><strong>NWS (weather.gov)</strong> — National Weather Service · Detailed forecasts & alerts · 7-day forecast</span>
+          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer">
+              <span style="font-weight:600"><strong>NWS (weather.gov)</strong></span>
+            </div>
+            <span style="margin-left:24px;color:#7ec8e3">Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
           </label>
-        </div>
-        <div style="font-size:calc(10px * var(--fs));color:#5a9ec0;line-height:1.5;background:rgba(47,116,164,0.1);padding:10px 12px;border-radius:6px;border-left:3px solid rgba(77,184,232,0.3);margin-bottom:12px">
-          <strong>How sources differ:</strong> WeatherAPI is fast and compact with 3 days of forecast. Open-Meteo offers 10 days with detailed precipitation data. NWS provides official government forecasts with weather alerts and the most detailed descriptions. Use the Accuracy page to compare how well each source predicts your local conditions.
         </div>
         <div style="text-align:center;font-size:calc(11px * var(--fs))">
           <a href="accuracy.html" style="color:#4db8e8;text-decoration:none">View forecast accuracy stats →</a>
