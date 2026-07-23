@@ -2111,7 +2111,7 @@
             Wind
             <a href="#" onclick="toggleWindView(event)" style="font-size:calc(12px * var(--fs));color:#4db8e8;margin-left:12px;text-decoration:none;font-weight:400">Detailed View</a>
           </div>
-          <div id="summaryWindChart">${windChart}</div>
+          <div id="summaryWindChart" data-summary="${windChart.replace(/"/g, '&quot;')}">${windChart}</div>
         </div>`;
 
         blocks.push(windSection);
@@ -2439,18 +2439,24 @@
     event.preventDefault();
     const link = event.target;
     const summaryChart = document.getElementById('summaryWindChart');
+    const windChart = document.getElementById('windChart');
     const windSection = document.getElementById('windSection');
 
     if (link.textContent === 'Detailed View') {
-      // Switch to detailed view
+      // Switch to detailed view - copy the detailed chart into summary area
       link.textContent = 'Summary View';
       summaryChart.style.display = 'none';
-      if (windSection) windSection.style.display = 'block';
+      // Copy the detailed wind chart HTML into the summary area
+      summaryChart.innerHTML = windChart.innerHTML;
+      summaryChart.style.display = 'block';
+      // Hide the separate wind section
+      if (windSection) windSection.style.display = 'none';
     } else {
       // Switch back to summary view
       link.textContent = 'Detailed View';
+      summaryChart.innerHTML = summaryChart.getAttribute('data-summary');
       summaryChart.style.display = 'block';
-      if (windSection) windSection.style.display = 'none';
+      if (windSection) windSection.style.display = 'block';
     }
   }
 </script>
