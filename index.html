@@ -2451,8 +2451,8 @@
     const detailedBtn = document.getElementById('windDetailedBtn');
 
     if (view === 'detailed') {
-      // Switch to detailed view
-      summaryChart.innerHTML = windChart.innerHTML;
+      // Switch to detailed view - wrap in scrollable container
+      summaryChart.innerHTML = `<div class="wind-scroll" style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch"><div class="wind-chart" style="width:100%;display:block">${windChart.innerHTML}</div></div>`;
       // Update button styles
       detailedBtn.style.background = 'rgba(77,184,232,0.25)';
       detailedBtn.style.borderColor = 'rgba(77,184,232,0.4)';
