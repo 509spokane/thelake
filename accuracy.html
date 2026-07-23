@@ -505,16 +505,23 @@ function renderWorstMisses(errors) {
       off by <strong>${Math.abs(worst.err_high).toFixed(0)}°</strong>.
     </div>
     <table>
-    <thead><tr><th>Date</th><th>Source</th><th class="num">Days out</th><th class="num">Predicted</th><th class="num">Actual<br>(F-Dock)</th><th class="num">Miss</th></tr></thead>
-    <tbody>${sorted.map(e => `
+    <thead><tr>
+      <th>When &amp; source</th>
+      <th class="num" style="text-align:right">Said &rarr; was</th>
+      <th class="num" style="text-align:right">Miss</th>
+    </tr></thead>
+    <tbody>${sorted.map(e => {
+      const [, mo, da] = e.target_date.split('-');
+      const when = new Date(+e.target_date.slice(0,4), +mo - 1, +da)
+        .toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `
       <tr>
-        <td>${e.target_date}</td>
-        <td class="src">${fmtSrc(e.source)}</td>
-        <td class="num">${e.days_out}</td>
-        <td class="num">${e.predicted_high}°</td>
-        <td class="num">${e.actual_high}°</td>
+        <td>${when}<br><span class="src" style="font-size:11px">${fmtSrc(e.source)}</span>
+          <span style="color:#4a7a96;font-size:11px">· ${e.days_out}d out</span></td>
+        <td class="num">${Math.round(e.predicted_high)}° &rarr; ${Math.round(e.actual_high)}°</td>
         <td class="num">${fmtDelta(e.err_high)}</td>
-      </tr>`).join('')}
+      </tr>`;
+    }).join('')}
     </tbody>
   </table>`;
 }
