@@ -1228,21 +1228,54 @@
       }
     });
 
-    // Peak gust labels: time above, "X mph 💨" below, on the highest point per day group
+    // Windy stretches, matching the summary chart: dot every hour above the
+    // threshold, and one label per stretch giving the span rather than a single
+    // peak hour. Runs separated by a short lull are merged so a gusty afternoon
+    // reads as "3pm–8pm" instead of three labels fighting for the same space.
     let peakLabels = '';
-    dayBounds.forEach((b, bi) => {
-      const endI = bi + 1 < dayBounds.length ? dayBounds[bi+1].i : n;
-      const daySlots = slots.slice(b.i, endI);
-      const peakS = daySlots.reduce((a, c) => c.gust > a.gust ? c : a);
-      const pi = slots.indexOf(peakS);
-      const px = xOf(pi), py = yOf(peakS.gust);
-      if (peakS.gust > 0) {
-        peakLabels += `<circle cx="${px}" cy="${py}" r="4" fill="rgba(210,90,20,0.9)"/>`;
-        peakLabels += `<text x="${px}" y="${py - 20}" text-anchor="middle" font-size="11" fill="rgba(255,210,150,0.85)" font-family="sans-serif">${fmtHr(peakS.t)}</text>`;
-        peakLabels += `<text x="${px}" y="${py - 7}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(255,200,130,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
-        peakLabels += `<image href="icons8-wind-90-inverted.png" x="${px + 24}" y="${py - 19}" width="14" height="14" opacity="0.7"/>`;
+    const maxGustV = Math.max(...slots.map(s => s.gust));
+    if (maxGustV > 0) {
+      const minGustV = Math.min(...slots.map(s => s.gust));
+      const gustThreshold = maxGustV - Math.min(5, (maxGustV - minGustV) * 0.3);
+
+      const rawRuns = [];
+      let wi = 0;
+      while (wi < slots.length) {
+        if (slots[wi].gust < gustThreshold) { wi++; continue; }
+        let wj = wi;
+        while (wj < slots.length && slots[wj].gust >= gustThreshold) wj++;
+        rawRuns.push({ startIdx: wi, endIdx: wj - 1 });
+        wi = wj;
       }
-    });
+
+      const MERGE_GAP_HRS = 5;
+      const mergedRuns = [];
+      for (const r of rawRuns) {
+        const last = mergedRuns[mergedRuns.length - 1];
+        const gapHrs = last ? (slots[r.startIdx].t - slots[last.endIdx].t) / 3600000 : Infinity;
+        if (last && gapHrs <= MERGE_GAP_HRS) last.endIdx = r.endIdx;
+        else mergedRuns.push({ startIdx: r.startIdx, endIdx: r.endIdx });
+      }
+
+      slots.forEach((s, i) => {
+        if (s.gust >= gustThreshold) {
+          peakLabels += `<circle cx="${xOf(i)}" cy="${yOf(s.gust)}" r="3.5" fill="rgba(210,90,20,0.9)"/>`;
+        }
+      });
+
+      for (const m of mergedRuns) {
+        const runSlots = slots.slice(m.startIdx, m.endIdx + 1);
+        const peakS = runSlots.reduce((a, b) => b.gust > a.gust ? b : a);
+        const cx = (xOf(m.startIdx) + xOf(m.endIdx)) / 2;
+        const peakY = yOf(peakS.gust);
+        const timeLabel = m.startIdx === m.endIdx
+          ? fmtHr(slots[m.startIdx].t)
+          : `${fmtHr(slots[m.startIdx].t)}–${fmtHr(slots[m.endIdx].t)}`;
+        peakLabels += `<text x="${cx}" y="${peakY - 20}" text-anchor="middle" font-size="11" fill="rgba(255,210,150,0.85)" font-family="sans-serif">${timeLabel}</text>`;
+        peakLabels += `<text x="${cx}" y="${peakY - 7}" text-anchor="middle" font-size="12" font-weight="700" fill="rgba(255,200,130,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
+        peakLabels += `<image href="icons8-wind-90-inverted.png" x="${cx + 26}" y="${peakY - 19}" width="14" height="14" opacity="0.7"/>`;
+      }
+    }
 
     // 12am x-positions for mph labels
     const midnightXs = [];
