@@ -1985,7 +1985,15 @@
         tempLabels + `</svg>` +
         `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${tempSentence}</div>`;
 
-      blocks.push(`<div style="margin-bottom:24px"><div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Temperature</div>${tempChart}</div>`);
+      const tempSection = `<div style="margin-bottom:24px">
+        <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Temperature</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
+          <button onclick="switchTempView('summary')" id="tempSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
+          <button onclick="switchTempView('columns')" id="tempColumnsBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:transparent;color:#7ec8e3;border:1px solid rgba(77,184,232,0.2);border-radius:6px;cursor:pointer;font-weight:500">Columns</button>
+        </div>
+        <div id="summaryTempChart" data-summary="${tempChart.replace(/"/g, '&quot;')}">${tempChart}</div>
+      </div>`;
+      blocks.push(tempSection);
     }
 
     // ── Wind: next 48 hours from _hourlyData ──
@@ -2107,12 +2115,10 @@
           `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
 
         const windSection = `<div style="margin-top:36px;margin-bottom:24px">
-          <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px">
-            <span>Wind</span>
-            <div style="display:flex;gap:6px">
-              <button onclick="switchWindView('summary')" id="windSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
-              <button onclick="switchWindView('detailed')" id="windDetailedBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:transparent;color:#7ec8e3;border:1px solid rgba(77,184,232,0.2);border-radius:6px;cursor:pointer;font-weight:500">Detailed</button>
-            </div>
+          <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>
+          <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
+            <button onclick="switchWindView('summary')" id="windSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
+            <button onclick="switchWindView('detailed')" id="windDetailedBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:transparent;color:#7ec8e3;border:1px solid rgba(77,184,232,0.2);border-radius:6px;cursor:pointer;font-weight:500">Detailed</button>
           </div>
           <div id="summaryWindChart" data-summary="${windChart.replace(/"/g, '&quot;')}">${windChart}</div>
         </div>`;
@@ -2465,6 +2471,42 @@
       detailedBtn.style.borderColor = 'rgba(77,184,232,0.2)';
       // Show the separate wind section
       if (windSection) windSection.style.display = 'block';
+    }
+  }
+
+  function switchTempView(view) {
+    const summaryChart = document.getElementById('summaryTempChart');
+    const waterLevelGrid = document.getElementById('waterLevelGrid');
+    const waterLevelSection = document.getElementById('waterLevelSection');
+    const summaryBtn = document.getElementById('tempSummaryBtn');
+    const columnsBtn = document.getElementById('tempColumnsBtn');
+
+    if (view === 'columns') {
+      // Switch to columns view
+      summaryChart.innerHTML = waterLevelGrid.innerHTML;
+      summaryChart.style.display = 'flex';
+      summaryChart.style.gap = '6px';
+      summaryChart.style.overflowX = 'auto';
+      summaryChart.style.paddingBottom = '6px';
+      summaryChart.style.WebkitOverflowScrolling = 'touch';
+      // Update button styles
+      columnsBtn.style.background = 'rgba(77,184,232,0.25)';
+      columnsBtn.style.borderColor = 'rgba(77,184,232,0.4)';
+      summaryBtn.style.background = 'transparent';
+      summaryBtn.style.borderColor = 'rgba(77,184,232,0.2)';
+      // Hide the separate water level section
+      if (waterLevelSection) waterLevelSection.style.display = 'none';
+    } else {
+      // Switch to summary view
+      summaryChart.innerHTML = summaryChart.getAttribute('data-summary');
+      summaryChart.style.display = 'block';
+      // Update button styles
+      summaryBtn.style.background = 'rgba(77,184,232,0.25)';
+      summaryBtn.style.borderColor = 'rgba(77,184,232,0.4)';
+      columnsBtn.style.background = 'transparent';
+      columnsBtn.style.borderColor = 'rgba(77,184,232,0.2)';
+      // Show the separate water level section
+      if (waterLevelSection) waterLevelSection.style.display = 'block';
     }
   }
 </script>
