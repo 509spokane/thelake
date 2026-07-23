@@ -515,6 +515,28 @@
 
     </div>
 
+    <!-- Weather Sources Section -->
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid rgba(77,184,232,0.15)">
+      <div style="font-size:calc(13px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px">Weather & Forecast Source</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+          <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer">
+          <span><strong>WeatherAPI.com</strong> — High & low temps, hourly wind & gusts · 3-day forecast</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+          <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer">
+          <span><strong>Open-Meteo</strong> — Detailed temperature, wind, and precipitation · 10-day forecast</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+          <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer">
+          <span><strong>NWS (weather.gov)</strong> — National Weather Service · Detailed forecasts & alerts · 7-day forecast</span>
+        </label>
+      </div>
+      <div style="font-size:calc(10px * var(--fs));color:#5a9ec0;line-height:1.5;background:rgba(47,116,164,0.1);padding:10px 12px;border-radius:6px;border-left:3px solid rgba(77,184,232,0.3)">
+        <strong>How sources differ:</strong> WeatherAPI is fast and compact with 3 days of forecast. Open-Meteo offers 10 days with detailed precipitation data. NWS provides official government forecasts with weather alerts and the most detailed descriptions. Use the Accuracy page to compare how well each source predicts your local conditions.
+      </div>
+    </div>
+
     <div class="font-size-picker">
       <select class="font-size-select" id="fontSizeSelect" onchange="setFontSize(this.value)">
         <option value="normal">Normal Text Size</option>
@@ -2522,6 +2544,30 @@
       if (waterLevelSection) waterLevelSection.style.display = 'block';
     }
   }
+
+  function setForecastSourceFromRadio(source) {
+    _forecastSource = source;
+    localStorage.setItem('forecastSource', source);
+    updateSourceLabels();
+    handleSourceChange();
+    if (_forecastSource === 'nws') {
+      if (_nwsHourlyData) renderWind(_nwsHourlyData);
+      else fetchNWSHourly();
+    } else if (_forecastSource === 'weatherapi') {
+      const statusEl = document.getElementById('sourceStatus');
+      if (statusEl) statusEl.textContent = '';
+      if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
+    }
+    renderSummary();
+  }
+
+  // Initialize radio button state
+  window.addEventListener('load', () => {
+    const radios = document.querySelectorAll('input[name="forecastSource"]');
+    radios.forEach(radio => {
+      radio.checked = (radio.value === _forecastSource);
+    });
+  });
 </script>
 
 <script data-goatcounter="https://thelake.goatcounter.com/count"
