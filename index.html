@@ -44,7 +44,7 @@
       z-index: 1;
       max-width: 800px;
       margin: 0 auto;
-      padding: 44px 20px 80px;
+      padding: 4px 20px 80px;   /* hero sits at the very top; see .hero */
     }
 
     header { text-align: center; margin-bottom: 32px; }
@@ -68,25 +68,37 @@
 
     .subtitle { margin-top: 8px; font-size: calc(13px * var(--fs)); color: #6a9ab8; letter-spacing: 0.05em; }
 
-    /* Header photo — breaks out of the container's padding so it runs
-       edge-to-edge on phones, then reins in to the card width on desktop. */
-    .header-photo {
-      display: block;
+    /* Hero — title sits at the very top with the photo behind it. The photo is
+       masked so its top third fades out into the page background, leaving the
+       title on dark sky rather than on the water. */
+    .hero {
+      position: relative;
       width: 100vw;
       margin-left: 50%;
       transform: translateX(-50%);
-      margin-top: 16px;
-      height: auto;
-      max-height: 300px;
-      object-fit: cover;
+      min-height: clamp(200px, 54vw, 320px);
+      padding-top: 6px;
+      margin-bottom: 18px;
+      overflow: hidden;
     }
-    @media (min-width: 800px) {
-      .header-photo {
-        width: 100%;
-        margin-left: 0;
-        transform: none;
-        border-radius: 14px;
-      }
+    .header-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 62%;   /* hold the boats and shoreline in frame */
+      z-index: 0;
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(to bottom,
+        transparent 0%, transparent 8%, rgba(0,0,0,0.45) 20%, #000 34%);
+              mask-image: linear-gradient(to bottom,
+        transparent 0%, transparent 8%, rgba(0,0,0,0.45) 20%, #000 34%);
+    }
+    .hero-text {
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 14px rgba(5,15,30,0.9), 0 1px 3px rgba(5,15,30,0.7);
     }
 
     /* Status */
@@ -344,7 +356,7 @@
 
     /* ── Mobile ── */
     @media (max-width: 500px) {
-      .container { padding: 28px 12px 60px; }
+      .container { padding: 4px 12px 60px; }
       header { margin-bottom: 20px; }
       .lake-name { font-size: 10px; letter-spacing: 0.18em; }
       .subtitle { font-size: 12px; }
@@ -519,9 +531,13 @@
 
 <div class="container">
   <header>
-    <h1>Lake <span>Roosevelt</span></h1>
-    <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Fort Spokane/Two Rivers</div>
-    <img class="header-photo" src="images/boats.jpg" alt="Aerial view of houseboats beached along the Lake Roosevelt shoreline">
+    <div class="hero">
+      <img class="header-photo" src="images/boats.jpg" alt="Aerial view of houseboats beached along the Lake Roosevelt shoreline">
+      <div class="hero-text">
+        <h1>Lake <span>Roosevelt</span></h1>
+        <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Fort Spokane/Two Rivers</div>
+      </div>
+    </div>
     <div id="alertBanner"></div>
   </header>
   <div id="statusText" style="display:none"></div>
