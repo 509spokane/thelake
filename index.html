@@ -2107,9 +2107,12 @@
           `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
 
         const windSection = `<div style="margin-top:36px;margin-bottom:24px">
-          <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">
-            Wind
-            <a href="#" onclick="toggleWindView(event)" style="font-size:calc(12px * var(--fs));color:#4db8e8;margin-left:12px;text-decoration:none;font-weight:400">Detailed View</a>
+          <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:12px">
+            <span>Wind</span>
+            <div style="display:flex;gap:6px">
+              <button onclick="switchWindView('summary')" id="windSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
+              <button onclick="switchWindView('detailed')" id="windDetailedBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:transparent;color:#7ec8e3;border:1px solid rgba(77,184,232,0.2);border-radius:6px;cursor:pointer;font-weight:500">Detailed</button>
+            </div>
           </div>
           <div id="summaryWindChart" data-summary="${windChart.replace(/"/g, '&quot;')}">${windChart}</div>
         </div>`;
@@ -2435,27 +2438,32 @@
     }
   }
 
-  function toggleWindView(event) {
-    event.preventDefault();
-    const link = event.target;
+  function switchWindView(view) {
     const summaryChart = document.getElementById('summaryWindChart');
     const windChart = document.getElementById('windChart');
     const windSection = document.getElementById('windSection');
+    const summaryBtn = document.getElementById('windSummaryBtn');
+    const detailedBtn = document.getElementById('windDetailedBtn');
 
-    if (link.textContent === 'Detailed View') {
-      // Switch to detailed view - copy the detailed chart into summary area
-      link.textContent = 'Summary View';
-      summaryChart.style.display = 'none';
-      // Copy the detailed wind chart HTML into the summary area
+    if (view === 'detailed') {
+      // Switch to detailed view
       summaryChart.innerHTML = windChart.innerHTML;
-      summaryChart.style.display = 'block';
+      // Update button styles
+      detailedBtn.style.background = 'rgba(77,184,232,0.25)';
+      detailedBtn.style.borderColor = 'rgba(77,184,232,0.4)';
+      summaryBtn.style.background = 'transparent';
+      summaryBtn.style.borderColor = 'rgba(77,184,232,0.2)';
       // Hide the separate wind section
       if (windSection) windSection.style.display = 'none';
     } else {
-      // Switch back to summary view
-      link.textContent = 'Detailed View';
+      // Switch to summary view
       summaryChart.innerHTML = summaryChart.getAttribute('data-summary');
-      summaryChart.style.display = 'block';
+      // Update button styles
+      summaryBtn.style.background = 'rgba(77,184,232,0.25)';
+      summaryBtn.style.borderColor = 'rgba(77,184,232,0.4)';
+      detailedBtn.style.background = 'transparent';
+      detailedBtn.style.borderColor = 'rgba(77,184,232,0.2)';
+      // Show the separate wind section
       if (windSection) windSection.style.display = 'block';
     }
   }
