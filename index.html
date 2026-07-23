@@ -531,7 +531,8 @@
     <div class="section-label">Conditions Summary</div>
     <div id="summaryBar" style="font-size:calc(13px * var(--fs));line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
     <div class="section-source-bar">
-      Temperature &amp; wind: <span id="summarySourceLabel">weather.gov</span>
+      Temperature: <span id="summarySourceLabel">weather.gov</span>
+      <div style="margin-top:4px">Wind: <span id="summaryWindSourceLabel">open-meteo.com</span></div>
       <div style="margin-top:4px">Lake level: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank" rel="noopener">USBR &middot; Grand Coulee</a></div>
     </div>
   </div>
@@ -734,6 +735,7 @@
   let _lakeActuals = new Map(); // "M/D" -> elevation_ft, loaded from data/lake_actuals.jsonl
   let _wxDayMap = null;   // { "4/25": { icon, desc, high, low, wind, gust } }
   let _omData = null;     // Open-Meteo daily data
+  let _omHourlyData = null; // Open-Meteo hourly — fallback wind for sources without their own
 
   function mergeAndRender() {
     if (!_lakeDays || !_wxDayMap) return;
@@ -1065,14 +1067,9 @@
       const res = await fetch(WIND_URL);
       const data = await res.json();
       _omData = data.daily;
-      // Always save hourly for wind chart fallback
-      if (_forecastSource === 'openmeteo') {
-        renderOpenMeteoForecastWaterLevelBg(_omData);
-        renderWind(data.hourly); // Save and render hourly
-      } else {
-        // For NWS and other sources, still render wind from Open-Meteo
-        renderWind(data.hourly);
-      }
+      _omHourlyData = data.hourly;   // kept as the fallback for sources with no hourly wind
+      if (_forecastSource === 'openmeteo') renderOpenMeteoForecastWaterLevelBg(_omData);
+      renderWindFrom('openmeteo', data.hourly);
     } catch (e) {
       console.error('Wind fetch failed:', e);
     }
@@ -1086,6 +1083,46 @@
 
   let _windMode = '2hr'; // 'hourly' | '2hr'
   let _hourlyData = null;
+
+  // Which source's hourly data is currently drawn in the wind chart.
+  // Every source's fetch finishes at its own pace, so without this the last
+  // response to land won the chart — you could end up looking at Open-Meteo
+  // wind under a "weatherapi.com" label. Route all wind rendering through
+  // renderWindFrom() so the selected source always wins, and Open-Meteo only
+  // fills in while the selected source has nothing to show.
+  let _windRenderedSource = null;
+
+  // Point the wind chart at the newly selected source, falling back to
+  // Open-Meteo when that source has no hourly wind of its own (yet).
+  function applyWindForSelectedSource() {
+    _windRenderedSource = null;   // let the new selection claim the chart
+    if (_forecastSource === 'nws') {
+      if (_nwsHourlyData) { renderWindFrom('nws', _nwsHourlyData); return; }
+      renderWindFrom('openmeteo', _omHourlyData);
+      fetchNWSHourly();
+      return;
+    }
+    if (_forecastSource === 'weatherapi') {
+      const statusEl = document.getElementById('sourceStatus');
+      if (statusEl) statusEl.textContent = '';
+      if (_weatherAPIHourlyData) { renderWindFrom('weatherapi', _weatherAPIHourlyData); return; }
+    }
+    renderWindFrom('openmeteo', _omHourlyData);
+  }
+
+  function renderWindFrom(source, hourly) {
+    if (!hourly || !hourly.time || !hourly.time.length) return;
+    const isSelected = source === _forecastSource;
+    if (!isSelected && _windRenderedSource === _forecastSource) return;
+    renderWind(hourly);
+    _windRenderedSource = source;
+    // Label whoever actually drew, not whoever was selected.
+    const lbl = WIND_SOURCE_LABELS[source] || source;
+    ['windSourceLabel', 'summaryWindSourceLabel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = lbl;
+    });
+  }
 
 
   function renderWind(hourly) {
@@ -1347,7 +1384,7 @@
         renderSummary();
       }
       // Render hourly wind if WeatherAPI is the selected source
-      if (_forecastSource === 'weatherapi' && hourlyData.time.length) renderWind(hourlyData);
+      renderWindFrom('weatherapi', hourlyData);
     } catch (e) {
       console.error('WeatherAPI fetch failed:', e);
     }
@@ -1900,7 +1937,7 @@
 
       _nwsHourlyData = hourlyData;
       if (statusEl) statusEl.textContent = `NWS data loaded · ${periods.length} hours`;
-      if (_forecastSource === 'nws') renderWind(_nwsHourlyData);
+      renderWindFrom('nws', _nwsHourlyData);
     } catch (e) {
       console.error('NWS hourly fetch failed:', e);
       if (statusEl) statusEl.textContent = `NWS load failed: ${e.message}`;
@@ -1963,8 +2000,8 @@
       const el = document.getElementById(id);
       if (el) el.textContent = lbl;
     });
-    const windEl = document.getElementById('windSourceLabel');
-    if (windEl) windEl.textContent = WIND_SOURCE_LABELS[_forecastSource] || 'open-meteo.com';
+    // Wind labels are owned by renderWindFrom() — it knows which source
+    // actually drew the chart, which is not always the selected one.
   }
 
   function onSourceChange(val) {
@@ -1974,14 +2011,7 @@
     // Close all pickers
     document.querySelectorAll('.inline-source-picker').forEach(p => p.style.display = 'none');
     handleSourceChange();
-    if (_forecastSource === 'nws') {
-      if (_nwsHourlyData) renderWind(_nwsHourlyData);
-      else fetchNWSHourly();
-    } else if (_forecastSource === 'weatherapi') {
-      const statusEl = document.getElementById('sourceStatus');
-      if (statusEl) statusEl.textContent = '';
-      if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
-    }
+    applyWindForSelectedSource();
     renderSummary();
   }
 
@@ -2624,14 +2654,7 @@
     localStorage.setItem('forecastSource', source);
     updateSourceLabels();
     handleSourceChange();
-    if (_forecastSource === 'nws') {
-      if (_nwsHourlyData) renderWind(_nwsHourlyData);
-      else fetchNWSHourly();
-    } else if (_forecastSource === 'weatherapi') {
-      const statusEl = document.getElementById('sourceStatus');
-      if (statusEl) statusEl.textContent = '';
-      if (_weatherAPIHourlyData) renderWind(_weatherAPIHourlyData);
-    }
+    applyWindForSelectedSource();
     renderSummary();
   }
 
