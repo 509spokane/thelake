@@ -68,6 +68,27 @@
 
     .subtitle { margin-top: 8px; font-size: calc(13px * var(--fs)); color: #6a9ab8; letter-spacing: 0.05em; }
 
+    /* Header photo — breaks out of the container's padding so it runs
+       edge-to-edge on phones, then reins in to the card width on desktop. */
+    .header-photo {
+      display: block;
+      width: 100vw;
+      margin-left: 50%;
+      transform: translateX(-50%);
+      margin-top: 16px;
+      height: auto;
+      max-height: 300px;
+      object-fit: cover;
+    }
+    @media (min-width: 800px) {
+      .header-photo {
+        width: 100%;
+        margin-left: 0;
+        transform: none;
+        border-radius: 14px;
+      }
+    }
+
     /* Status */
     .status-bar {
       display: flex;
@@ -472,6 +493,7 @@
     <h1>The <span>Lake</span></h1>
     <div class="lake-name" style="font-size:calc(10px * var(--fs));margin-top:4px">Two Rivers &bull; Lake Roosevelt &bull; Fort Spokane</div>
     <div style="margin-top:6px;font-size:calc(11px * var(--fs));color:#4a7a96;letter-spacing:0.08em">Weather, Wind, &amp; Water Level Info</div>
+    <img class="header-photo" src="images/boats.jpg" alt="Aerial view of houseboats beached along the Lake Roosevelt shoreline">
     <div id="alertBanner"></div>
   </header>
   <div id="statusText" style="display:none"></div>
