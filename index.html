@@ -374,6 +374,72 @@
     }
     .font-size-select:focus { border-color: rgba(77,184,232,0.5); }
     a.source-link:hover { opacity: 1; }
+
+    /* Expandable alerts section */
+    .alert-container {
+      margin-top: 12px;
+    }
+    .alert-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(220,140,30,0.15);
+      border: 1px solid rgba(220,140,30,0.4);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: calc(12px * var(--fs));
+      font-weight: 600;
+      color: #f0c060;
+      letter-spacing: 0.05em;
+      width: 100%;
+      text-align: left;
+      border: none;
+    }
+    .alert-toggle:hover {
+      background: rgba(220,140,30,0.25);
+    }
+    .alert-toggle-arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+    .alert-toggle-arrow.open {
+      transform: rotate(90deg);
+    }
+    .alert-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .alert-content.open {
+      max-height: 2000px;
+    }
+    .alert-item {
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: rgba(220,140,30,0.12);
+      border: 1px solid rgba(220,140,30,0.3);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .alert-item:first-child {
+      margin-top: 12px;
+    }
+    .alert-event {
+      font-size: calc(12px * var(--fs));
+      font-weight: 600;
+      color: #f0c060;
+    }
+    .alert-time {
+      font-size: calc(11px * var(--fs));
+      color: #c8a050;
+      margin-left: 10px;
+    }
+    .alert-what {
+      font-size: calc(11px * var(--fs));
+      color: #c8a868;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -1955,7 +2021,10 @@
         const peakStr = topPeaks.length ? ', peaking at ' + topPeaks.map(p => hl(fmtPeak(p.t))).join(' and ') : '';
 
         // ── SVG curve chart: 48-hour gust ──
-        const wsvgW = 560, wsvgH = Math.round(80 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(50 * _svgScale), wpadB = Math.round(18 * _svgScale);
+        // Tall plot area so gust peaks swing as prominently as the standalone
+        // "Next 48 Hours" chart (which gives its curve ~109 of 230 units).
+        // Top pad stays ~50 for the two-line peak labels above the highest peak.
+        const wsvgW = 560, wsvgH = Math.round(130 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(50 * _svgScale), wpadB = Math.round(18 * _svgScale);
         const wn = slots.length;
         const wxOf = i => wpadL + (i / (wn - 1)) * (wsvgW - wpadL - wpadR);
         const wyOf = v => wpadT + (1 - v / Math.max(1, maxGust)) * (wsvgH - wpadT - wpadB);
@@ -2280,22 +2349,38 @@
         headers: { 'User-Agent': 'TheLakeApp/1.0 (github.com/509spokane/thelake)' }
       });
       const data = await res.json();
-      const alerts = (data.features || []).filter(f => f.properties?.status === 'Actual');
+      const actual = (data.features || []).filter(f => f.properties?.status === 'Actual');
+
+      // Dedupe: only keep the newest alert for each event type
+      const byEventType = new Map();
+      for (const f of actual) {
+        const p = f.properties;
+        const eventType = p.event || 'Weather Alert';
+        const prev = byEventType.get(eventType);
+        if (!prev || new Date(p.sent) > new Date(prev.properties.sent)) {
+          byEventType.set(eventType, f);
+        }
+      }
+      const alerts = [...byEventType.values()];
+
       const banner = document.getElementById('alertBanner');
       if (!alerts.length) { banner.innerHTML = ''; return; }
 
-      banner.innerHTML = alerts.map(f => {
+      // Parse time window
+      const fmtAlertTime = iso => {
+        const d = new Date(iso);
+        return d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles',
+          weekday: 'short', month: 'numeric', day: 'numeric',
+          hour: 'numeric', minute: '2-digit', hour12: true
+        }).replace(':00', '').replace(/ AM/, 'am').replace(/ PM/, 'pm');
+      };
+
+      // Link to the public NWS forecast page for this location (shows active alerts)
+      const detailUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
+
+      const alertsHtml = alerts.map(f => {
         const p = f.properties;
         const event = p.event || 'Weather Alert';
-
-        // Parse time window
-        const fmtAlertTime = iso => {
-          const d = new Date(iso);
-          return d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles',
-            weekday: 'short', month: 'numeric', day: 'numeric',
-            hour: 'numeric', minute: '2-digit', hour12: true
-          }).replace(':00', '').replace(/ AM/, 'am').replace(/ PM/, 'pm');
-        };
         const start = p.onset || p.effective;
         const end   = p.expires || p.ends;
         const timeRange = start && end
@@ -2306,19 +2391,39 @@
         const whatMatch = (p.description || '').match(/\*\s*WHAT[.\s]*\.([\s\S]*?)(?=\n\*|\n\n|$)/i);
         const what = whatMatch ? whatMatch[1].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : '';
 
-        // Link to the public NWS forecast page for this location (shows active alerts)
-        const detailUrl = `https://forecast.weather.gov/MapClick.php?lat=47.9048&lon=-118.3046`;
-
-        return `<div style="margin-top:10px;padding:8px 14px;background:rgba(220,140,30,0.15);border:1px solid rgba(220,140,30,0.4);border-radius:8px;text-align:center">
+        return `<div class="alert-item">
           <a href="${detailUrl}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
-            <span style="font-size:calc(12px * var(--fs));font-weight:600;color:#f0c060;letter-spacing:0.05em">⚠️ ${event}</span>
-            ${timeRange ? `<span style="font-size:calc(11px * var(--fs));color:#c8a050;margin-left:10px">${timeRange}</span>` : ''}
-            ${what ? `<div style="font-size:calc(11px * var(--fs));color:#c8a868;margin-top:4px">${what}</div>` : ''}
+            <div class="alert-event">⚠️ ${event}</div>
+            ${timeRange ? `<span class="alert-time">${timeRange}</span>` : ''}
+            ${what ? `<div class="alert-what">${what}</div>` : ''}
           </a>
         </div>`;
       }).join('');
+
+      const containerId = 'alertContainer';
+      const alertCount = alerts.length;
+      banner.innerHTML = `
+        <div class="alert-container">
+          <button class="alert-toggle" onclick="toggleAlertContent()">
+            <span class="alert-toggle-arrow">▶</span>
+            <span>⚠️ ${alertCount} Alert${alertCount !== 1 ? 's' : ''}</span>
+          </button>
+          <div id="${containerId}" class="alert-content">
+            ${alertsHtml}
+          </div>
+        </div>
+      `;
     } catch(e) {
       console.warn('[alerts] fetch failed:', e.message);
+    }
+  }
+
+  function toggleAlertContent() {
+    const container = document.getElementById('alertContainer');
+    const arrow = container.querySelector('.alert-toggle-arrow');
+    if (container) {
+      container.classList.toggle('open');
+      arrow.classList.toggle('open');
     }
   }
 </script>
