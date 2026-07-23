@@ -299,6 +299,14 @@
       border: 1px solid rgba(77,184,232,0.20);
       display: flex; flex-direction: column; position: relative; flex-shrink: 0;
     }
+    /* Columns view inside the summary: when a source only returns a few days,
+       let the columns share the leftover width instead of leaving dead space.
+       min-width keeps them at 78px once there are enough days to overflow, so
+       10-day sources scroll exactly as before. "safe center" degrades to
+       flex-start where unsupported, which avoids the centred-overflow trap. */
+    #summaryTempChart { justify-content: safe center; }
+    #summaryTempChart .wl-col { flex: 1 1 78px; max-width: 110px; }
+
     .wl-corner-icon {
       position: absolute; top: -8px; left: -8px;
       font-size: 52px; line-height: 1; z-index: 1;
