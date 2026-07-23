@@ -539,27 +539,18 @@
         <span>Weather Sources</span>
       </button>
       <div id="sourcesContent" class="sources-content">
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;margin-bottom:14px">
-          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer">
-              <span style="font-weight:600"><strong>WeatherAPI.com</strong></span>
-            </div>
-            <span style="margin-left:24px;color:#7ec8e3">Fast and compact with 3 days of forecast. High & low temps, hourly wind & gusts.</span>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;margin-bottom:14px">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer;margin-top:3px">
+            <span><strong>WeatherAPI.com</strong> — Fast and compact with 3 days of forecast. High &amp; low temps, hourly wind &amp; gusts.</span>
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer">
-              <span style="font-weight:600"><strong>Open-Meteo</strong></span>
-            </div>
-            <span style="margin-left:24px;color:#7ec8e3">Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer;margin-top:3px">
+            <span><strong>Open-Meteo</strong> — Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer">
-              <span style="font-weight:600"><strong>NWS (weather.gov)</strong></span>
-            </div>
-            <span style="margin-left:24px;color:#7ec8e3">Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
+            <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer;margin-top:3px">
+            <span><strong>NWS (weather.gov)</strong> — Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
           </label>
         </div>
         <div style="text-align:center;font-size:calc(11px * var(--fs))">
