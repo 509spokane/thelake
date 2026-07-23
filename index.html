@@ -1714,12 +1714,10 @@
         col.dataset.today = 'true';
       }
 
-      const dayStyle = isToday ? 'style="font-size:calc(16px * var(--fs))"' : '';
-
       col.innerHTML = `
         <div class="wl-rows" style="${warmBg};position:relative">
           <div class="wl-r wl-r-day">
-            <span class="wl-day" ${dayStyle}>${dayNames[i]}</span>
+            <span class="wl-day">${dayNames[i]}</span>
           </div>
           <div class="wl-r wl-r-date"><span class="wl-date">${d}</span></div>
           <div class="wl-r wl-r-high"><span class="wl-high">${high}</span></div>
