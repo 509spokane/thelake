@@ -480,7 +480,8 @@
     <div class="section-label">Conditions Summary</div>
     <div id="summaryBar" style="font-size:calc(13px * var(--fs));line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
     <div class="section-source-bar">
-      Source: <span id="summarySourceLabel">weather.gov</span>
+      Temperature &amp; wind: <span id="summarySourceLabel">weather.gov</span>
+      <div style="margin-top:4px">Lake level: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank" rel="noopener">USBR &middot; Grand Coulee</a></div>
     </div>
   </div>
 
@@ -539,18 +540,18 @@
         <span>Weather Sources</span>
       </button>
       <div id="sourcesContent" class="sources-content">
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;margin-bottom:14px;text-align:left">
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer;margin-top:3px">
-            <span><strong>WeatherAPI.com</strong> — Fast and compact with 3 days of forecast. High &amp; low temps, hourly wind &amp; gusts.</span>
+            <span><strong>WeatherAPI.com</strong><span class="best-src" data-src="weatherapi"></span> — Fast and compact with 3 days of forecast. High &amp; low temps, hourly wind &amp; gusts.</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer;margin-top:3px">
-            <span><strong>Open-Meteo</strong> — Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
+            <span><strong>Open-Meteo</strong><span class="best-src" data-src="openmeteo"></span> — Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer;margin-top:3px">
-            <span><strong>NWS (weather.gov)</strong> — Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
+            <span><strong>NWS (weather.gov)</strong><span class="best-src" data-src="nws"></span> — Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
           </label>
         </div>
         <div style="text-align:center;font-size:calc(11px * var(--fs))">
@@ -2595,7 +2596,66 @@
     radios.forEach(radio => {
       radio.checked = (radio.value === _forecastSource);
     });
+    markMostAccurateSource();
   });
+
+  // Flag the source with the lowest mean absolute high-temp error.
+  // Mirrors the leaderboard math on accuracy.html: one forecast per
+  // (source, target_date) — the first captured — matched to that day's actual high.
+  async function markMostAccurateSource() {
+    const readJsonl = async path => {
+      try {
+        const r = await fetch(path, { cache: 'no-store' });
+        if (!r.ok) return [];
+        return (await r.text()).split('\n').filter(Boolean)
+          .map(l => { try { return JSON.parse(l); } catch { return null; } })
+          .filter(Boolean);
+      } catch { return []; }
+    };
+
+    const [forecasts, actuals] = await Promise.all([
+      readJsonl('data/forecasts.jsonl'),
+      readJsonl('data/actuals.jsonl')
+    ]);
+    if (!forecasts.length || !actuals.length) return;
+
+    // date → highest afternoon_high reading
+    const highByDate = new Map();
+    for (const a of actuals) {
+      if (!a.date || a.type !== 'afternoon_high' || a.temp_f == null) continue;
+      const prev = highByDate.get(a.date);
+      if (prev == null || a.temp_f > prev) highByDate.set(a.date, a.temp_f);
+    }
+
+    const firstFc = new Map();
+    for (const f of forecasts) {
+      const key = f.source + '|' + f.target_date;
+      if (!firstFc.has(key)) firstFc.set(key, f);
+    }
+
+    const errsBySource = new Map();
+    for (const f of firstFc.values()) {
+      const actualHigh = highByDate.get(f.target_date);
+      if (actualHigh == null || f.high_f == null) continue;
+      if (!errsBySource.has(f.source)) errsBySource.set(f.source, []);
+      errsBySource.get(f.source).push(Math.abs(f.high_f - actualHigh));
+    }
+
+    let best = null, bestMae = Infinity;
+    for (const [src, errs] of errsBySource) {
+      if (errs.length < 5) continue;  // too few matches to call a winner
+      const mae = errs.reduce((a, b) => a + b, 0) / errs.length;
+      if (mae < bestMae) { bestMae = mae; best = src; }
+    }
+    if (!best) return;
+
+    const badge = document.querySelector(`.best-src[data-src="${best}"]`);
+    if (badge) {
+      badge.textContent = ' (most accurate)';
+      badge.style.color = '#6ad8a0';
+      badge.style.fontWeight = '600';
+    }
+  }
 </script>
 
 <script data-goatcounter="https://thelake.goatcounter.com/count"
