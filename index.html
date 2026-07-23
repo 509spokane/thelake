@@ -491,7 +491,9 @@
     <div class="elev-compact-meta" id="elevMeta">above sea level</div>
   </div>
 
-  <div class="card" id="waterLevelSection">
+  <!-- Hidden, not deleted: #waterLevelGrid still renders the day columns that the
+       Temperature "Columns" toggle in the Conditions Summary copies from. -->
+  <div class="card" id="waterLevelSection" style="display:none">
     <div class="section-label">10-Day Forecast &amp; Water Level Visualization</div>
     <div class="combined-scroll">
       <div id="waterLevelGrid" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">
@@ -2514,7 +2516,6 @@
   function switchTempView(view) {
     const summaryChart = document.getElementById('summaryTempChart');
     const waterLevelGrid = document.getElementById('waterLevelGrid');
-    const waterLevelSection = document.getElementById('waterLevelSection');
     const summaryBtn = document.getElementById('tempSummaryBtn');
     const columnsBtn = document.getElementById('tempColumnsBtn');
 
@@ -2549,8 +2550,6 @@
       columnsBtn.style.borderColor = 'rgba(77,184,232,0.4)';
       summaryBtn.style.background = 'transparent';
       summaryBtn.style.borderColor = 'rgba(77,184,232,0.2)';
-      // Hide the separate water level section
-      if (waterLevelSection) waterLevelSection.style.display = 'none';
     } else {
       // Switch to summary view
       summaryChart.innerHTML = summaryChart.getAttribute('data-summary');
@@ -2560,8 +2559,6 @@
       summaryBtn.style.borderColor = 'rgba(77,184,232,0.4)';
       columnsBtn.style.background = 'transparent';
       columnsBtn.style.borderColor = 'rgba(77,184,232,0.2)';
-      // Show the separate water level section
-      if (waterLevelSection) waterLevelSection.style.display = 'block';
     }
   }
 
