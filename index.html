@@ -329,7 +329,10 @@
     .wl-low  { font-size: calc(12px * var(--fs)); color: #7ec8e3; }
     .wl-wind { font-size: calc(10px * var(--fs)); color: #a0cce8; }
     .wl-rain { font-size: calc(10px * var(--fs)); color: #7ec8e3; }
-    .wl-water-zone { position: relative; height: 80px; flex-shrink: 0; overflow: hidden; }
+    /* margin-top:auto pins the water to the bottom of the column. Columns are
+       stretched to match the tallest one, so without this any column with
+       shorter content leaves a gap of bare background under the water. */
+    .wl-water-zone { position: relative; height: 80px; flex-shrink: 0; overflow: hidden; margin-top: auto; }
     .wl-fill { position: absolute; bottom: 0; left: 0; right: 0; background: #2F74A4; }
     .wl-badge {
       position: absolute; left: 50%; transform: translateX(-50%);
@@ -486,6 +489,24 @@
     .sources-toggle-arrow.open {
       transform: rotate(90deg);
     }
+    .src-loc {
+      display: block;
+      margin-top: 3px;
+      font-size: calc(10px * var(--fs));
+      color: #5a8aaa;
+      line-height: 1.5;
+    }
+    .src-note {
+      font-size: calc(10px * var(--fs));
+      color: #5a9ec0;
+      line-height: 1.5;
+      text-align: left;
+      background: rgba(47,116,164,0.1);
+      padding: 10px 12px;
+      border-radius: 6px;
+      border-left: 3px solid rgba(77,184,232,0.3);
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
@@ -575,16 +596,22 @@
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;margin-bottom:14px;text-align:left">
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="weatherapi" onchange="setForecastSourceFromRadio('weatherapi')" style="cursor:pointer;margin-top:3px">
-            <span><strong>WeatherAPI.com</strong><span class="best-src" data-src="weatherapi"></span> — Fast and compact with 3 days of forecast. High &amp; low temps, hourly wind &amp; gusts.</span>
+            <span><strong>WeatherAPI.com</strong><span class="best-src" data-src="weatherapi"></span> — Fast and compact with 3 days of forecast. High &amp; low temps, hourly wind &amp; gusts.
+              <span class="src-loc">Forecasts &ldquo;Fort Spokane, WA&rdquo; (47.905, &minus;118.308) &mdash; about 0.15 mi from the marina, the closest match of the three.</span></span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="openmeteo" onchange="setForecastSourceFromRadio('openmeteo')" style="cursor:pointer;margin-top:3px">
-            <span><strong>Open-Meteo</strong><span class="best-src" data-src="openmeteo"></span> — Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.</span>
+            <span><strong>Open-Meteo</strong><span class="best-src" data-src="openmeteo"></span> — Offers 10 days with detailed precipitation data. Temperature, wind, and precipitation forecasts.
+              <span class="src-loc">Model cell at 47.894, &minus;118.313 &mdash; about 0.85 mi away, elevation 1,411 ft (124 ft above the lake).</span></span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:calc(11px * var(--fs));color:#a0cce8">
             <input type="radio" name="forecastSource" value="nws" onchange="setForecastSourceFromRadio('nws')" style="cursor:pointer;margin-top:3px">
-            <span><strong>NWS (weather.gov)</strong><span class="best-src" data-src="nws"></span> — Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.</span>
+            <span><strong>NWS (weather.gov)</strong><span class="best-src" data-src="nws"></span> — Official government forecasts with weather alerts and the most detailed descriptions. 7-day forecast.
+              <span class="src-loc">Spokane office grid cell OTX 114,106 &mdash; a 1.4 mi&nbsp;wide square centered 0.6 mi away at elevation 1,608 ft, so its number is an average over the surrounding terrain rather than a single point.</span></span>
           </label>
+        </div>
+        <div class="src-note">
+          All three are asked for the same coordinates &mdash; 47.9048, &minus;118.3046 at Two Rivers &middot; Fort Spokane &mdash; but each snaps that request to its own grid, so they end up forecasting slightly different places. Accuracy is scored against the dock weather station (F&#8209;Dock, KWADAVEN5) right at the water, roughly 1,287 ft. Every forecast cell sits above the lake on dry ground, which is the likeliest reason all three tend to run warm against the dock reading.
         </div>
         <div style="text-align:center;font-size:calc(11px * var(--fs))">
           <a href="accuracy.html" style="color:#4db8e8;text-decoration:none">View forecast accuracy stats →</a>
