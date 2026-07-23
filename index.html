@@ -488,7 +488,7 @@
     </div>
   </div>
 
-  <div class="card" id="windSection">
+  <div class="card" id="windSection" style="display:none">
     <div class="section-label">Wind · Next 48 Hours</div>
     <div class="wind-scroll">
       <div class="wind-chart" id="windChart">
@@ -2447,7 +2447,6 @@
   function switchWindView(view) {
     const summaryChart = document.getElementById('summaryWindChart');
     const windChart = document.getElementById('windChart');
-    const windSection = document.getElementById('windSection');
     const summaryBtn = document.getElementById('windSummaryBtn');
     const detailedBtn = document.getElementById('windDetailedBtn');
 
@@ -2459,8 +2458,6 @@
       detailedBtn.style.borderColor = 'rgba(77,184,232,0.4)';
       summaryBtn.style.background = 'transparent';
       summaryBtn.style.borderColor = 'rgba(77,184,232,0.2)';
-      // Hide the separate wind section
-      if (windSection) windSection.style.display = 'none';
     } else {
       // Switch to summary view
       summaryChart.innerHTML = summaryChart.getAttribute('data-summary');
@@ -2469,8 +2466,6 @@
       summaryBtn.style.borderColor = 'rgba(77,184,232,0.4)';
       detailedBtn.style.background = 'transparent';
       detailedBtn.style.borderColor = 'rgba(77,184,232,0.2)';
-      // Show the separate wind section
-      if (windSection) windSection.style.display = 'block';
     }
   }
 
@@ -2482,8 +2477,26 @@
     const columnsBtn = document.getElementById('tempColumnsBtn');
 
     if (view === 'columns') {
-      // Switch to columns view
-      summaryChart.innerHTML = waterLevelGrid.innerHTML;
+      // Switch to columns view - filter out past dates
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayKey = `${today.getMonth()+1}/${today.getDate()}`;
+
+      // Clone and filter the grid to only show today and future dates
+      const columns = waterLevelGrid.querySelectorAll('.wl-col');
+      let filteredHTML = '';
+      columns.forEach(col => {
+        const dateText = col.querySelector('.wl-date')?.textContent || '';
+        const dayText = col.querySelector('.wl-day')?.textContent || '';
+        // Include today and future dates (skip if date element not found or is empty)
+        if (!dateText || dateText.includes('Today') ||
+            (dateText && !dateText.match(/^\d+\/\d+$/) ||
+             (dateText.match(/^\d+\/\d+$/) && dateText >= todayKey))) {
+          filteredHTML += col.outerHTML;
+        }
+      });
+
+      summaryChart.innerHTML = filteredHTML || waterLevelGrid.innerHTML;
       summaryChart.style.display = 'flex';
       summaryChart.style.gap = '6px';
       summaryChart.style.overflowX = 'auto';
