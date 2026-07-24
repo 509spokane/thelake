@@ -2180,12 +2180,17 @@
 
     // ── Wind: next 48 hours from _hourlyData ──
     if (_hourlyData) {
-      const now = new Date();
+      // Keep the current hour until it fully passes. Timestamps land on the
+      // hour, so comparing against an un-floored `now` would drop the in-progress
+      // hour the moment the clock ticks past :00 — clipping a windy stretch
+      // that's happening right now and sometimes losing its dots and label.
+      const nowHr = new Date();
+      nowHr.setMinutes(0, 0, 0);
       const slots = _hourlyData.time.map((t, i) => ({
         t: new Date(t.replace(' ', 'T')),
         spd: _hourlyData.wind_speed_10m[i],
         gust: _hourlyData.wind_gusts_10m[i] ?? 0   // a source may not forecast gusts for every hour
-      })).filter(x => x.t >= now).slice(0, 48);
+      })).filter(x => x.t >= nowHr).slice(0, 48);
 
       if (slots.length) {
         const avgWind = Math.round(slots.reduce((a, x) => a + x.spd, 0) / slots.length);
