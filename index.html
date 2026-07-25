@@ -1236,7 +1236,10 @@
     const maxGustV = Math.max(...slots.map(s => s.gust));
     if (maxGustV > 0) {
       const minGustV = Math.min(...slots.map(s => s.gust));
-      const gustThreshold = maxGustV - Math.min(5, (maxGustV - minGustV) * 0.3);
+      // Absolute floor (14.5 = rounds to 15+ mph) so a soon event isn't hidden
+      // behind a bigger gust later in the window. Matches the summary chart.
+      const GUST_FLOOR = 14.5;
+      const gustThreshold = Math.min(maxGustV - Math.min(5, (maxGustV - minGustV) * 0.3), GUST_FLOOR);
 
       const rawRuns = [];
       let wi = 0;
@@ -2196,7 +2199,12 @@
         const avgWind = Math.round(slots.reduce((a, x) => a + x.spd, 0) / slots.length);
         const maxGust = Math.max(...slots.map(x => x.gust));
         const minGust = Math.min(...slots.map(x => x.gust));
-        const gustThreshold = maxGust - Math.min(5, (maxGust - minGust) * 0.3);
+        // Relative threshold highlights the windiest part of the window, but on
+        // its own it hides a soon event when a bigger gust sits later in the
+        // 48h. Cap it with an absolute floor (14.5 = anything rounding to 15+
+        // mph) so genuinely breezy hours always get marked.
+        const GUST_FLOOR = 14.5;
+        const gustThreshold = Math.min(maxGust - Math.min(5, (maxGust - minGust) * 0.3), GUST_FLOOR);
 
         const peaks = [];
         for (let i = 1; i < slots.length - 1; i++) {
