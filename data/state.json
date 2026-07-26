@@ -1,79 +1,8 @@
 {
-  "day": "2026-07-25",
-  "morning_done": true,
-  "afternoon_done": true,
-  "wind_alerts": [
-    {
-      "hour": 13,
-      "predicted_wind_mph": 15,
-      "predicted_gust_mph": 24,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 14,
-      "predicted_wind_mph": 17,
-      "predicted_gust_mph": 25,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 15,
-      "predicted_wind_mph": 19,
-      "predicted_gust_mph": 31,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 16,
-      "predicted_wind_mph": 18,
-      "predicted_gust_mph": 32,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 17,
-      "predicted_wind_mph": 19,
-      "predicted_gust_mph": 29,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 18,
-      "predicted_wind_mph": 18,
-      "predicted_gust_mph": 28,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 19,
-      "predicted_wind_mph": 15,
-      "predicted_gust_mph": 24,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 20,
-      "predicted_wind_mph": 13,
-      "predicted_gust_mph": 25,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 21,
-      "predicted_wind_mph": 8,
-      "predicted_gust_mph": 25,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 22,
-      "predicted_wind_mph": 6,
-      "predicted_gust_mph": 23,
-      "source": "openmeteo",
-      "checked": true
-    }
-  ],
-  "random_hour": 10,
-  "random_done": true
+  "day": "2026-07-26",
+  "morning_done": false,
+  "afternoon_done": false,
+  "wind_alerts": [],
+  "random_hour": null,
+  "random_done": false
 }
