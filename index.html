@@ -2224,6 +2224,9 @@
         for (const p of peaks) {
           if (topPeaks.every(tp => Math.abs(p.t - tp.t) >= 4 * 3600000)) { topPeaks.push(p); if (topPeaks.length === 2) break; }
         }
+        // Chosen by gust size above; list them in time order so the sentence
+        // doesn't read "8pm and 2pm".
+        topPeaks.sort((a, b) => a.t - b.t);
 
         const fmtHr = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
         const fmtDay = t => t.toLocaleDateString([], {weekday:'short'});
