@@ -544,6 +544,7 @@
 
   <div class="card" id="summarySection" style="display:none;margin-bottom:14px">
     <div class="section-label">Conditions Summary</div>
+    <div id="summaryHeadline" style="font-size:calc(14px * var(--fs));line-height:1.6;color:#7ec8e3;margin-bottom:16px"></div>
     <div id="summaryBar" style="font-size:calc(13px * var(--fs));line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
     <div class="section-source-bar">
       Temperature: <span id="summarySourceLabel">weather.gov</span>
@@ -2082,6 +2083,9 @@
     const BLUE   = 'rgba(47,116,164,0.65)';
     const ORANGE = 'rgba(180,70,0,0.88)';
     const blocks = [];
+    // Collected one-line summaries, shown together under the heading instead of
+    // at the foot of each section.
+    let tempHeadline = '', windHeadline = '';
 
     // ── Temperature: next 10 forecast days ──
     const parseTemp = t => { const m = String(t || '').match(/-?\d+/); return m ? parseInt(m[0]) : null; };
@@ -2163,7 +2167,7 @@
                `<text x="${x}" y="${svgH - 4}" text-anchor="middle" font-size="${fs}" fill="${labelColor}" font-family="sans-serif">${dayShort}</text>`;
       }).join('');
 
-      const tempSentence = `Average high ${hl(avgHigh + '°')}, peaking at ${peakStr}.`;
+      tempHeadline = `Average high ${hl(avgHigh + '°')}, peaking at ${peakStr}.`;
       const tempChart = `<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" style="display:block;overflow:visible">` +
         `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">` +
         `<stop offset="0%" stop-color="rgba(180,90,20,0.35)"/>` +
@@ -2171,8 +2175,7 @@
         `</linearGradient></defs>` +
         `<path d="${fillPath}" fill="url(#tg)"/>` +
         `<path d="${curvePath}" fill="none" stroke="rgba(200,110,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-        tempLabels + `</svg>` +
-        `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${tempSentence}</div>`;
+        tempLabels + `</svg>`;
 
       const tempSection = `<div style="margin-bottom:24px">
         <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Temperature</div>
@@ -2301,7 +2304,7 @@
         }
 
         const gustPart = maxGust > 10 ? `, gusts up to ${hl(Math.round(maxGust) + ' mph')}${peakStr}` : '';
-        const windSentence = `Wind averaging ${hl(avgWind + ' mph')}${gustPart}.`;
+        windHeadline = `Wind averaging ${hl(avgWind + ' mph')}${gustPart}.`;
         const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
@@ -2310,8 +2313,7 @@
           dayLines +
           `<path d="${wfill}" fill="url(#wg)"/>` +
           `<path d="${wcurve}" fill="none" stroke="rgba(80,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-          windyDots + `</svg>` +
-          `<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6">${windSentence}</div>`;
+          windyDots + `</svg>`;
 
         const windSection = `<div style="margin-top:36px;margin-bottom:24px">
           <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>
@@ -2433,6 +2435,11 @@
 
     if (blocks.length) {
       el.innerHTML = blocks.join('<hr style="border:none;border-top:1px solid rgba(126,200,227,0.35);margin:0">');
+      const headline = document.getElementById('summaryHeadline');
+      if (headline) {
+        headline.innerHTML = [tempHeadline, windHeadline].filter(Boolean)
+          .map(s => `<div>${s}</div>`).join('');
+      }
       const section = document.getElementById('summarySection');
       if (section) section.style.display = 'block';
       updateSourceLabels();
