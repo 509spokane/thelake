@@ -2614,11 +2614,28 @@
 
       const containerId = 'alertContainer';
       const alertCount = alerts.length;
+      // One-word category per alert for the collapsed label, e.g. "(fire, wind)".
+      const alertWord = (event) => {
+        const e = (event || '').toLowerCase();
+        if (e.includes('red flag') || e.includes('fire')) return 'fire';
+        if (e.includes('air quality') || e.includes('smoke')) return 'air';
+        if (e.includes('wind')) return 'wind';
+        if (e.includes('flood')) return 'flood';
+        if (e.includes('heat') || e.includes('excessive heat')) return 'heat';
+        if (e.includes('snow') || e.includes('blizzard') || e.includes('winter') || e.includes('ice')) return 'snow';
+        if (e.includes('thunder') || e.includes('tstorm')) return 'storm';
+        if (e.includes('cold') || e.includes('freeze') || e.includes('frost') || e.includes('chill')) return 'cold';
+        if (e.includes('rain')) return 'rain';
+        if (e.includes('fog')) return 'fog';
+        // Fallback: first word of the event name, lowercased.
+        return (event || 'alert').split(/\s+/)[0].toLowerCase();
+      };
+      const words = [...new Set(alerts.map(f => alertWord(f.properties.event)))];
       banner.innerHTML = `
         <div class="alert-container">
           <button class="alert-toggle" onclick="toggleAlertContent()">
             <span class="alert-toggle-arrow">▶</span>
-            <span>⚠️ ${alertCount} Alert${alertCount !== 1 ? 's' : ''}</span>
+            <span>⚠️ ${alertCount} Alert${alertCount !== 1 ? 's' : ''} (${words.join(', ')})</span>
           </button>
           <div id="${containerId}" class="alert-content">
             ${alertsHtml}
