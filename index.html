@@ -1226,7 +1226,7 @@
     let timeLabels = '';
     slots.forEach((s, i) => {
       const hr = s.t.getHours();
-      if (hr % 6 === 0 && i > 0) {
+      if (hr % 3 === 0 && i > 0) {
         const x = xOf(i);
         timeLabels += `<text x="${x}" y="${padT - 52}" text-anchor="middle" font-size="11" fill="rgba(126,200,227,0.6)" font-family="sans-serif">${fmtHr(s.t)}</text>`;
       }
@@ -2481,14 +2481,10 @@
     el.innerHTML =
       `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0 24px">` +
         row('🌡️', 'Temperature', `${im.temp}°F`) +
-        row('💧', 'Humidity', `${obs.humidity}%`) +
         row('💨', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
         row('🌬️', 'Gusts', `${im.windGust} mph`) +
-        row('🌡️', 'Feels Like', `${im.heatIndex !== im.temp ? im.heatIndex : im.windChill}°F`) +
-        row('💦', 'Dew Point', `${im.dewpt}°F`) +
-        row('📊', 'Pressure', `${im.pressure} inHg`) +
+        row('💧', 'Humidity', `${obs.humidity}%`) +
         row('☀️', 'UV Index', `${obs.uv}`) +
-        row('🌤️', 'Solar Rad.', `${obs.solarRadiation} W/m²`) +
         row('🌧️', 'Precip Today', `${im.precipTotal}"`) +
       `</div>` +
       `<div style="text-align:right;font-size:calc(10px * var(--fs));color:#3a6a82;margin-top:8px">Updated ${updated}</div>`;
