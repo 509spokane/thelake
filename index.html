@@ -1041,7 +1041,11 @@
 
     _wxDayMap = buildWxDayMap(periods);
     mergeAndRender();
-    mergeAndRenderWaterLevelBg();
+    // Only paint the column grid from NWS when NWS is the selected source.
+    // NWS loads on every page load, so calling this unconditionally overwrote
+    // the grid with NWS days even when another source (e.g. WeatherAPI) was
+    // selected — making the Columns view disagree with the Temperature summary.
+    if (_forecastSource === 'nws') mergeAndRenderWaterLevelBg();
     renderSummary();
   }
 
