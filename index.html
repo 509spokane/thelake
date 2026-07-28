@@ -422,8 +422,8 @@
     /* Summary headline: centered, with a small heading over each group */
     #summaryHeadline { text-align: center; }
     #summaryHeadline .sh-head {
-      font-weight: 600; color: #7ec8e3; margin-bottom: 2px;
-      letter-spacing: 0.02em;
+      font-weight: 600; color: #7ec8e3;
+      letter-spacing: 0.02em; margin-right: 4px;
     }
 
     /* Expandable alerts section */
@@ -2183,9 +2183,8 @@
       }).join('');
 
       tempHeadline =
-        `<div class="sh-head">High Temps</div>` +
-        `<div>Avg : ${hl(avgHigh + '°')}</div>` +
-        `<div>Peaking: ${hl(maxHigh + '°')} on ${peakWeekday}, ${ordinal(peakDay.dom)}</div>`;
+        `<div><span class="sh-head">High Temps</span> Avg : ${hl(avgHigh + '°')}. ` +
+        `Peaking: ${hl(maxHigh + '°')} on ${peakWeekday}, ${ordinal(peakDay.dom)}</div>`;
       const tempChart = `<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" style="display:block;overflow:visible">` +
         `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">` +
         `<stop offset="0%" stop-color="rgba(180,90,20,0.35)"/>` +
@@ -2257,9 +2256,9 @@
           const when = sameDay
             ? `at ${topPeaks.map(p => fmtHr(p.t)).join(' & ')} on ${fmtDayOrd(topPeaks[0].t)}`
             : `at ${topPeaks.map(p => `${fmtHr(p.t)} on ${fmtDayOrd(p.t)}`).join(' & ')}`;
-          gustBullet = `<div>Gusting to ${hl(Math.round(maxGust) + ' mph')} ${when}</div>`;
+          gustBullet = `Gusting to ${hl(Math.round(maxGust) + ' mph')} ${when}`;
         } else if (maxGust > 10) {
-          gustBullet = `<div>Gusting to ${hl(Math.round(maxGust) + ' mph')}</div>`;
+          gustBullet = `Gusting to ${hl(Math.round(maxGust) + ' mph')}`;
         }
 
         // ── SVG curve chart: 48-hour gust ──
@@ -2335,7 +2334,8 @@
           windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
         }
 
-        windHeadline = `<div class="sh-head">Wind</div><div>Avg: ${hl(avgWind + ' mph')}</div>` + gustBullet;
+        windHeadline = `<div><span class="sh-head">Wind</span> Avg: ${hl(avgWind + ' mph')}.` +
+          (gustBullet ? ` ${gustBullet}` : '') + `</div>`;
         const windChart = `<svg viewBox="0 0 ${wsvgW} ${wsvgH}" width="100%" height="${wsvgH}" style="display:block;overflow:visible">` +
           `<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">` +
           `<stop offset="0%" stop-color="rgba(47,116,164,0.45)"/>` +
