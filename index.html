@@ -557,12 +557,23 @@
 
   <div class="card" id="summarySection" style="display:none;margin-bottom:14px">
     <div class="section-label">Conditions Summary</div>
-    <div id="summaryHeadline" style="font-size:calc(14px * var(--fs));line-height:1.6;color:#7ec8e3;margin-bottom:16px"></div>
+    <div id="summaryHeadline" style="font-size:calc(14px * var(--fs));line-height:1.6;color:#7ec8e3"></div>
+  </div>
+
+  <div class="card" id="tempWindSection" style="display:none;margin-bottom:14px">
+    <div class="section-label">Temperature and Wind</div>
     <div id="summaryBar" style="font-size:calc(13px * var(--fs));line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
     <div class="section-source-bar">
       Temperature: <span id="summarySourceLabel">weather.gov</span>
       <div style="margin-top:4px">Wind: <span id="summaryWindSourceLabel">open-meteo.com</span></div>
-      <div style="margin-top:4px">Lake level: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank" rel="noopener">USBR &middot; Grand Coulee</a></div>
+    </div>
+  </div>
+
+  <div class="card" id="lakeLevelSummarySection" style="display:none;margin-bottom:14px">
+    <div class="section-label">Lake Level</div>
+    <div id="lakeLevelBar" style="font-size:calc(13px * var(--fs));line-height:1.8;color:#7ec8e3;overflow:hidden"></div>
+    <div class="section-source-bar">
+      Source: <a class="source-link" href="https://www.usbr.gov/pn/grandcoulee/lakelevel/" target="_blank" rel="noopener">USBR &middot; Grand Coulee</a>
     </div>
   </div>
 
@@ -2095,7 +2106,8 @@
     const hl = s => `<strong style="color:#e8f4ff;font-weight:700">${s}</strong>`;
     const BLUE   = 'rgba(47,116,164,0.65)';
     const ORANGE = 'rgba(180,70,0,0.88)';
-    const blocks = [];
+    const blocks = [];       // temperature + wind charts
+    const lakeBlocks = [];   // lake level chart (its own card)
     // Collected one-line summaries, shown together under the heading instead of
     // at the foot of each section.
     let tempHeadline = '', windHeadline = '';
@@ -2470,21 +2482,29 @@
           `<path d="${wlCurve}" fill="none" stroke="rgba(77,160,210,0.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
           wlDotLabels + `</svg>`;
 
-        blocks.push(`<div style="margin-top:36px"><div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Lake Level</div>${wlChart}<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6;padding:0 18px">${waterSentence}</div></div>`);
+        lakeBlocks.push(`<div>${wlChart}<div style="text-align:center;font-size:calc(14px * var(--fs));color:#7ec8e3;margin-top:6px;line-height:1.6;padding:0 18px">${waterSentence}</div></div>`);
       }
     }
 
+    const headline = document.getElementById('summaryHeadline');
+    if (headline) {
+      headline.innerHTML = [tempHeadline, windHeadline].filter(Boolean)
+        .map(s => `<div style="margin-bottom:6px">${s}</div>`).join('');
+    }
+    const showIf = (id, on) => { const s = document.getElementById(id); if (s) s.style.display = on ? 'block' : 'none'; };
+
     if (blocks.length) {
       el.innerHTML = blocks.join('<hr style="border:none;border-top:1px solid rgba(126,200,227,0.35);margin:0">');
-      const headline = document.getElementById('summaryHeadline');
-      if (headline) {
-        headline.innerHTML = [tempHeadline, windHeadline].filter(Boolean)
-          .map(s => `<div style="margin-bottom:6px">${s}</div>`).join('');
-      }
-      const section = document.getElementById('summarySection');
-      if (section) section.style.display = 'block';
-      updateSourceLabels();
     }
+    // Conditions Summary (text) and Temperature and Wind (charts) travel together.
+    showIf('summarySection', blocks.length > 0);
+    showIf('tempWindSection', blocks.length > 0);
+
+    const lakeBar = document.getElementById('lakeLevelBar');
+    if (lakeBar && lakeBlocks.length) lakeBar.innerHTML = lakeBlocks.join('');
+    showIf('lakeLevelSummarySection', lakeBlocks.length > 0);
+
+    if (blocks.length || lakeBlocks.length) updateSourceLabels();
   }
 
   // ── Header quick-stats ────────────────────────────────────
