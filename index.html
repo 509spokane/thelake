@@ -2093,6 +2093,12 @@
     // at the foot of each section.
     let tempHeadline = '', windHeadline = '';
 
+    // Day-of-month as an ordinal ("the 28th") for the summary sentences.
+    const ordinal = n => {
+      const s = ['th','st','nd','rd'], v = n % 100;
+      return `the ${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
+    };
+
     // ── Temperature: next 10 forecast days ──
     const parseTemp = t => { const m = String(t || '').match(/-?\d+/); return m ? parseInt(m[0]) : null; };
     const today = new Date(); today.setHours(0,0,0,0);
@@ -2104,7 +2110,7 @@
       _weatherAPIData.filter(d => d.date >= todayStr).slice(0, 10).forEach(d => {
         const [_y, _m, _dd] = d.date.split('-');
         const dt = new Date(+_y, +_m - 1, +_dd);
-        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: Math.round(d.day.maxtemp_f) });
+        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, dom: +_dd, high: Math.round(d.day.maxtemp_f) });
       });
     } else if (_forecastSource === 'openmeteo' && _omData) {
       const todayStr = today.toISOString().slice(0, 10);
@@ -2114,7 +2120,7 @@
         const dt = new Date(+_y, +_m - 1, +_dd);
         const highF = _omData.temperature_2m_max[i];
         if (highF == null) return;
-        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, high: Math.round(highF) });
+        highsByDate.push({ date: `${dt.toLocaleDateString([],{weekday:'short'})} ${+_m}/${+_dd}`, dom: +_dd, high: Math.round(highF) });
       });
     } else if (_wxDayMap) {
       for (let i = 0; i < 10; i++) {
@@ -2122,7 +2128,7 @@
         const key = `${d.getMonth()+1}/${d.getDate()}`;
         const wx = _wxDayMap[key];
         const high = wx ? parseTemp(wx.high) : null;
-        if (high !== null) highsByDate.push({ date: `${d.toLocaleDateString([],{weekday:'short'})} ${key}`, high });
+        if (high !== null) highsByDate.push({ date: `${d.toLocaleDateString([],{weekday:'short'})} ${key}`, dom: d.getDate(), high });
       }
     }
 
@@ -2139,12 +2145,8 @@
         if (!top2.length || Math.abs(d.high - top2[top2.length-1].high) >= 1) { top2.push(d); if (top2.length === 2) break; }
       }
       const peakDays = highsByDate.filter(d => d.high === maxHigh);
-      let peakStr;
-      if (peakDays.length > 1) {
-        peakStr = `${hl(maxHigh + '°')} on ${hl(peakDays[0].date)}`;
-      } else {
-        peakStr = `${hl(maxHigh + '°')} on ${hl(highsByDate.find(d => d.high === maxHigh).date)}`;
-      }
+      const peakDay = peakDays.length ? peakDays[0] : highsByDate.find(d => d.high === maxHigh);
+      const peakStr = `${hl(maxHigh + '°')} on ${hl(ordinal(peakDay.dom))}`;
 
       // ── SVG curve chart: 10-day high temps ──
       const svgW = 560, svgH = Math.round(70 * _svgScale), padL = Math.round(32 * _svgScale), padR = Math.round(32 * _svgScale), padT = Math.round(16 * _svgScale), padB = Math.round(18 * _svgScale);
@@ -2236,7 +2238,7 @@
 
         const fmtHr = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
         const fmtDay = t => t.toLocaleDateString([], {weekday:'short'});
-        const fmtPeak = t => `${fmtHr(t)} ${fmtDay(t)} ${t.getMonth()+1}/${t.getDate()}`;
+        const fmtPeak = t => `${fmtHr(t)} ${ordinal(t.getDate())}`;
         const peakStr = topPeaks.length ? ', peaking at ' + topPeaks.map(p => hl(fmtPeak(p.t))).join(' and ') : '';
 
         // ── SVG curve chart: 48-hour gust ──
@@ -2390,7 +2392,7 @@
           }
         }
         // Mini water level SVG curve chart
-        const wlW = 560, wlH = Math.round(80 * _svgScale), wlPadL = Math.round(34 * _svgScale), wlPadR = Math.round(34 * _svgScale), wlPadT = Math.round(26 * _svgScale), wlPadB = Math.round(18 * _svgScale);
+        const wlW = 560, wlH = Math.round(94 * _svgScale), wlPadL = Math.round(34 * _svgScale), wlPadR = Math.round(34 * _svgScale), wlPadT = Math.round(42 * _svgScale), wlPadB = Math.round(18 * _svgScale);
         const wlN = elevs.length;
         const wlMin = Math.min(...elevs) - 0.2;
         const wlMax = Math.max(...elevs) + 0.2;
@@ -2424,7 +2426,17 @@
           const elevFill = isToday ? 'rgba(255,255,255,0.95)' : 'rgba(230,240,250,0.95)';
           const elevWeight = isToday ? '700' : '600';
           const elevLabel = `<text x="${x}" y="${y - 9}" text-anchor="middle" font-size="${elevFontSize}" font-weight="${elevWeight}" fill="${elevFill}" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${v.toFixed(1)}'</text>`;
+          // Change from the previous day, above the elevation value: +/- to tenths.
+          let deltaLabel = '';
+          if (i > 0 && elevs[i-1] != null) {
+            const delta = Math.round((v - elevs[i-1]) * 10) / 10;
+            const deltaTxt = `${delta > 0 ? '+' : delta < 0 ? '−' : '±'}${Math.abs(delta).toFixed(1)}'`;
+            const deltaFill = delta > 0 ? 'rgba(110,210,150,0.95)' : delta < 0 ? 'rgba(240,150,90,0.95)' : 'rgba(150,180,205,0.85)';
+            const deltaFontSize = Math.round(11 * _svgScale);
+            deltaLabel = `<text x="${x}" y="${y - 9 - elevFontSize - 2}" text-anchor="middle" font-size="${deltaFontSize}" font-weight="600" fill="${deltaFill}" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${deltaTxt}</text>`;
+          }
           return `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotColor}"/>` +
+                 deltaLabel +
                  elevLabel +
                  `<text x="${x}" y="${wlH - 4}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="${labelWeight}" fill="${labelColor}" font-family="sans-serif">${isToday ? 'Today' : dayPart}</text>`;
         }).join('');
