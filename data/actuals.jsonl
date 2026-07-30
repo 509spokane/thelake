@@ -225,3 +225,4 @@
 {"recorded_at":"2026-07-28T22:10:41.613Z","date":"2026-07-28","hour":15,"type":"afternoon_high","obs_time":"2026-07-28T22:10:30Z","temp_f":82,"wind_mph":13.9,"gust_mph":17.2,"wind_dir_deg":228,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-07-29T15:11:16.350Z","date":"2026-07-29","hour":8,"type":"morning_low","obs_time":"2026-07-29T15:11:13Z","temp_f":63.1,"wind_mph":0,"gust_mph":0,"wind_dir_deg":132,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-07-29T21:02:48.327Z","date":"2026-07-29","hour":14,"type":"afternoon_high","obs_time":"2026-07-29T21:02:43Z","temp_f":79.2,"wind_mph":6.3,"gust_mph":10.3,"wind_dir_deg":194,"humidity":10,"precip_today_in":0}
+{"recorded_at":"2026-07-30T14:19:15.183Z","date":"2026-07-30","hour":7,"type":"morning_low","obs_time":"2026-07-30T14:19:02Z","temp_f":58.6,"wind_mph":1.8,"gust_mph":3.4,"wind_dir_deg":74,"humidity":10,"precip_today_in":0}
