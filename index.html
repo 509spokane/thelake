@@ -2196,7 +2196,7 @@
 
       tempHeadline =
         `<div><span class="sh-head">High Temps</span> Avg : ${hl(avgHigh + '°')}. ` +
-        `Peaking: ${hl(maxHigh + '°')} on ${peakWeekday}, ${ordinal(peakDay.dom)}</div>`;
+        `Peaking: ${hl(maxHigh + '°')} on <span style="white-space:nowrap">${peakWeekday}, ${ordinal(peakDay.dom)}</span></div>`;
       const tempChart = `<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" style="display:block;overflow:visible">` +
         `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">` +
         `<stop offset="0%" stop-color="rgba(180,90,20,0.35)"/>` +
@@ -2259,7 +2259,7 @@
 
         const fmtHr = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
         const fmtDay = t => t.toLocaleDateString([], {weekday:'short'});
-        const fmtDayOrd = t => `${fmtDay(t)}, ${ordinal(t.getDate())}`;
+        const fmtDayOrd = t => `<span style="white-space:nowrap">${fmtDay(t)}, ${ordinal(t.getDate())}</span>`;
         // Gust bullet: "Gusts up to 14 mph at 2pm & 8pm on Tue, the 28th".
         // Collapse the day when both peaks share it, else spell out each.
         let gustBullet = '';
