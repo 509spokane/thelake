@@ -1156,17 +1156,20 @@
       const y  = yOf(a.gust);
       out += `<line x1="${xs}" y1="${y}" x2="${xe}" y2="${y}" stroke="rgba(230,60,50,0.9)" stroke-width="2" stroke-dasharray="6 4"/>`;
 
-      // PDS core: solid, thicker segment over the dashed span, label over it.
-      let label = `Alert: gusts to ${a.gust} mph`;
+      // PDS core: solid, thicker segment over the dashed span. Label sits over
+      // it, with the "worst" window on its own line above the main label.
+      const label = `Alert: gusts to ${a.gust} mph`;
       let labelX = (xs + xe) / 2;
+      let worstLine = '';
       const hasCore = a.coreStart && a.coreEnd && a.coreEnd > t0 && a.coreStart < t1;
       if (hasCore) {
         const cs = xOfTime(a.coreStart < t0 ? t0 : a.coreStart);
         const ce = xOfTime(a.coreEnd > t1 ? t1 : a.coreEnd);
         out += `<line x1="${cs}" y1="${y}" x2="${ce}" y2="${y}" stroke="rgba(230,60,50,1)" stroke-width="4" stroke-linecap="round"/>`;
-        label += ` (worst ${fmtHrShort(a.coreStart)}–${fmtHrShort(a.coreEnd)})`;
         labelX = (cs + ce) / 2;
+        worstLine = `<text x="${labelX}" y="${y - 6 - Math.round(fontPx * 1.25)}" text-anchor="middle" font-size="${fontPx}" font-weight="700" fill="rgba(240,90,80,1)" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">worst ${fmtHrShort(a.coreStart)}–${fmtHrShort(a.coreEnd)}</text>`;
       }
+      out += worstLine;
       out += `<text x="${labelX}" y="${y - 6}" text-anchor="middle" font-size="${fontPx}" font-weight="700" fill="rgba(240,90,80,1)" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${label}</text>`;
     }
     return out;
