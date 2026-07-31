@@ -1147,6 +1147,7 @@
   // Date to an x position (clamped); yOf maps mph to y. Returns '' when no
   // alert overlaps [t0, t1].
   function alertGustOverlay(t0, t1, xOfTime, yOf, fontPx) {
+    const fmtHrShort = t => { const h = t.getHours(); return `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`; };
     let out = '';
     for (const a of _alertGusts) {
       if (a.end <= t0 || a.start >= t1) continue;
@@ -1154,7 +1155,19 @@
       const xe = xOfTime(a.end > t1 ? t1 : a.end);
       const y  = yOf(a.gust);
       out += `<line x1="${xs}" y1="${y}" x2="${xe}" y2="${y}" stroke="rgba(230,60,50,0.9)" stroke-width="2" stroke-dasharray="6 4"/>`;
-      out += `<text x="${(xs + xe) / 2}" y="${y - 5}" text-anchor="middle" font-size="${fontPx}" font-weight="700" fill="rgba(240,90,80,1)" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">Alert: gusts to ${a.gust} mph</text>`;
+
+      // PDS core: solid, thicker segment over the dashed span, label over it.
+      let label = `Alert: gusts to ${a.gust} mph`;
+      let labelX = (xs + xe) / 2;
+      const hasCore = a.coreStart && a.coreEnd && a.coreEnd > t0 && a.coreStart < t1;
+      if (hasCore) {
+        const cs = xOfTime(a.coreStart < t0 ? t0 : a.coreStart);
+        const ce = xOfTime(a.coreEnd > t1 ? t1 : a.coreEnd);
+        out += `<line x1="${cs}" y1="${y}" x2="${ce}" y2="${y}" stroke="rgba(230,60,50,1)" stroke-width="4" stroke-linecap="round"/>`;
+        label += ` (worst ${fmtHrShort(a.coreStart)}–${fmtHrShort(a.coreEnd)})`;
+        labelX = (cs + ce) / 2;
+      }
+      out += `<text x="${labelX}" y="${y - 6}" text-anchor="middle" font-size="${fontPx}" font-weight="700" fill="rgba(240,90,80,1)" font-family="sans-serif" stroke="rgba(8,18,40,0.85)" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${label}</text>`;
     }
     return out;
   }
@@ -2712,7 +2725,22 @@
         const m = (p.description || '').match(/gusts?\s+(?:up to|of|to|as high as)?\s*(?:(\d+)\s*to\s*)?(\d+)\s*mph/i);
         const start = p.onset || p.effective, end = p.ends || p.expires;
         if (m && start && end) {
-          _alertGusts.push({ gust: parseInt(m[2], 10), start: new Date(start), end: new Date(end), event: p.event || 'Alert' });
+          const entry = { gust: parseInt(m[2], 10), start: new Date(start), end: new Date(end), event: p.event || 'Alert' };
+          // A "Particularly Dangerous Situation" carries a tighter core window
+          // inside the warning ("PDS RED FLAG IN EFFECT 2PM UNTIL 8PM" /
+          // "in effect between 2 PM and 8 PM"). Only in the free text, never
+          // in the structured fields, so parse it out and clamp to the alert.
+          const pds = (p.description || '').match(
+            /(?:PARTICULARLY DANGEROUS SITUATION|PDS)[^.]*?(?:in effect|between|from)\s*(?:between\s*)?(\d{1,2})\s*(AM|PM)\s*(?:until|to|and|through|-)\s*(\d{1,2})\s*(AM|PM)/i);
+          if (pds) {
+            const to24 = (h, ap) => (h % 12) + (/pm/i.test(ap) ? 12 : 0);
+            const cs = new Date(entry.start); cs.setHours(to24(+pds[1], pds[2]), 0, 0, 0);
+            const ce = new Date(entry.start); ce.setHours(to24(+pds[3], pds[4]), 0, 0, 0);
+            if (ce > cs && cs >= entry.start && ce <= entry.end) {
+              entry.coreStart = cs; entry.coreEnd = ce;
+            }
+          }
+          _alertGusts.push(entry);
         }
       }
       if (_alertGusts.length) {
