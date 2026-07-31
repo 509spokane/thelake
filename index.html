@@ -2389,9 +2389,12 @@
           const timeLabel = m.startIdx === m.endIdx
             ? fmtHr(slots[m.startIdx].t)
             : `${fmtHr(slots[m.startIdx].t)}–${fmtHr(slots[m.endIdx].t)}`;
-          const lblGap = Math.round(16 * _svgScale);
-          windyDots += `<text x="${cx}" y="${peakY - lblGap - Math.round(14 * _svgScale)}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" fill="rgba(255,220,170,0.8)" font-family="sans-serif">${timeLabel}</text>`;
-          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" font-weight="600" fill="rgba(255,200,140,0.95)" font-family="sans-serif">${Math.round(peakS.gust)} mph</text>`;
+          // Single line ("3pm–8pm · 23 mph") so the label doesn't collide with
+          // the red alert-gust line drawn above the forecast curve.
+          const lblGap = Math.round(10 * _svgScale);
+          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" font-family="sans-serif">` +
+            `<tspan fill="rgba(255,220,170,0.8)">${timeLabel} · </tspan>` +
+            `<tspan font-weight="600" fill="rgba(255,200,140,0.95)">${Math.round(peakS.gust)} mph</tspan></text>`;
         }
 
         windHeadline = `<div><span class="sh-head">Wind</span> Avg: ${hl(avgWind + ' mph')}.` +
