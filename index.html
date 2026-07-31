@@ -2317,6 +2317,14 @@
         // "Next 48 Hours" chart (which gives its curve ~109 of 230 units).
         // Top pad stays ~50 for the two-line peak labels above the highest peak.
         const wsvgW = 560, wsvgH = Math.round(130 * _svgScale), wpadL = 2, wpadR = 2, wpadT = Math.round(50 * _svgScale), wpadB = Math.round(18 * _svgScale);
+
+        // Match the detailed chart's on-screen text size. That chart is a fixed
+        // 900px SVG, so its 12-unit text renders at 12 CSS px. This one is a
+        // 560-unit viewBox stretched to the container, so convert: units-per-px
+        // = 560 / rendered width. _svgScale still applies relative to normal so
+        // the font-size picker keeps working.
+        const wCw = el.clientWidth || 560;
+        const wFS = base => Math.max(7, Math.round(base * (560 / wCw) * (_svgScale / SVG_SCALES.normal)));
         const wn = slots.length;
         const wxOf = i => wpadL + (i / (wn - 1)) * (wsvgW - wpadL - wpadR);
         // Stretch the scale when an overlapping alert names a higher gust than
@@ -2328,7 +2336,7 @@
           const frac = (t - wT0) / Math.max(1, wT1 - wT0);
           return wpadL + Math.min(1, Math.max(0, frac)) * (wsvgW - wpadL - wpadR);
         };
-        const wAlertOverlay = alertGustOverlay(wT0, wT1, wxOfTime, wyOf, Math.round(12 * _svgScale));
+        const wAlertOverlay = alertGustOverlay(wT0, wT1, wxOfTime, wyOf, wFS(12));
 
         const wpts = slots.map((s, i) => [wxOf(i), wyOf(s.gust)]);
         let wcurve = `M ${wpts[0][0]},${wpts[0][1]}`;
@@ -2353,7 +2361,7 @@
           const nextX = bi + 1 < dayBounds.length ? dayBounds[bi + 1].x : wsvgW - wpadR;
           const cx = (b.x + nextX) / 2;
           const label = `${fmtDay(b.t)} ${b.t.getMonth()+1}/${b.t.getDate()}`;
-          dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="${Math.round(14 * _svgScale)}" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
+          dayLines += `<text x="${cx}" y="${wsvgH - 4}" text-anchor="middle" font-size="${wFS(12)}" fill="rgba(150,190,220,0.7)" font-family="sans-serif">${label}</text>`;
         });
 
         // Orange dots for every above-threshold slot, plus one merged label per run group.
@@ -2392,7 +2400,7 @@
           // Single line ("3pm–8pm · 23 mph") so the label doesn't collide with
           // the red alert-gust line drawn above the forecast curve.
           const lblGap = Math.round(10 * _svgScale);
-          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${Math.round(13 * _svgScale)}" font-family="sans-serif">` +
+          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${wFS(12)}" font-family="sans-serif">` +
             `<tspan fill="rgba(255,220,170,0.8)">${timeLabel} · </tspan>` +
             `<tspan font-weight="600" fill="rgba(255,200,140,0.95)">${Math.round(peakS.gust)} mph</tspan></text>`;
         }
