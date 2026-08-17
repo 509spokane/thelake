@@ -22,7 +22,7 @@
       "predicted_wind_mph": 14,
       "predicted_gust_mph": 23,
       "source": "weatherapi",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 20,
