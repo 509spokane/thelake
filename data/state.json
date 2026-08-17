@@ -1,8 +1,44 @@
 {
   "day": "2026-08-17",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [],
-  "random_hour": null,
+  "wind_alerts": [
+    {
+      "hour": 9,
+      "predicted_wind_mph": 15,
+      "predicted_gust_mph": 24,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 10,
+      "predicted_wind_mph": 14,
+      "predicted_gust_mph": 23,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 12,
+      "predicted_wind_mph": 14,
+      "predicted_gust_mph": 23,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 20,
+      "predicted_wind_mph": 14,
+      "predicted_gust_mph": 25,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 21,
+      "predicted_wind_mph": 13,
+      "predicted_gust_mph": 25,
+      "source": "weatherapi",
+      "checked": false
+    }
+  ],
+  "random_hour": 14,
   "random_done": false
 }
