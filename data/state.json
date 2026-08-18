@@ -36,7 +36,7 @@
       "predicted_wind_mph": 13,
       "predicted_gust_mph": 25,
       "source": "weatherapi",
-      "checked": false
+      "checked": true
     }
   ],
   "random_hour": 14,
