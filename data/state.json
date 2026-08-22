@@ -1,8 +1,23 @@
 {
   "day": "2026-08-22",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [],
-  "random_hour": null,
+  "wind_alerts": [
+    {
+      "hour": 13,
+      "predicted_wind_mph": 15,
+      "predicted_gust_mph": 26,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 14,
+      "predicted_wind_mph": 16,
+      "predicted_gust_mph": 27,
+      "source": "weatherapi",
+      "checked": false
+    }
+  ],
+  "random_hour": 11,
   "random_done": false
 }
