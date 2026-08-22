@@ -302,3 +302,4 @@
 {"recorded_at":"2026-08-21T21:30:07.121Z","date":"2026-08-21","hour":14,"type":"afternoon_high","obs_time":"2026-08-21T21:29:57Z","temp_f":94.3,"wind_mph":3.8,"gust_mph":9.2,"wind_dir_deg":302,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-08-22T13:36:07.037Z","date":"2026-08-22","hour":6,"type":"morning_low","obs_time":"2026-08-22T13:36:01Z","temp_f":72.3,"wind_mph":2.2,"gust_mph":2.2,"wind_dir_deg":114,"humidity":10,"precip_today_in":0}
 {"recorded_at":"2026-08-22T18:38:03.071Z","date":"2026-08-22","hour":11,"type":"random","obs_time":"2026-08-22T18:37:57Z","temp_f":80.4,"wind_mph":5.4,"gust_mph":6.9,"wind_dir_deg":234,"humidity":10,"precip_today_in":0}
+{"recorded_at":"2026-08-22T20:29:23.375Z","date":"2026-08-22","hour":13,"type":"wind_alert","predicted_wind_mph":15,"predicted_gust_mph":26,"predicted_source":"weatherapi","obs_time":"2026-08-22T20:29:20Z","temp_f":82.8,"wind_mph":1.1,"gust_mph":3.4,"wind_dir_deg":188,"humidity":10,"precip_today_in":0}
