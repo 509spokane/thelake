@@ -1,23 +1,8 @@
 {
-  "day": "2026-08-22",
-  "morning_done": true,
-  "afternoon_done": true,
-  "wind_alerts": [
-    {
-      "hour": 13,
-      "predicted_wind_mph": 15,
-      "predicted_gust_mph": 26,
-      "source": "weatherapi",
-      "checked": true
-    },
-    {
-      "hour": 14,
-      "predicted_wind_mph": 16,
-      "predicted_gust_mph": 27,
-      "source": "weatherapi",
-      "checked": true
-    }
-  ],
-  "random_hour": 11,
-  "random_done": true
+  "day": "2026-08-23",
+  "morning_done": false,
+  "afternoon_done": false,
+  "wind_alerts": [],
+  "random_hour": null,
+  "random_done": false
 }
