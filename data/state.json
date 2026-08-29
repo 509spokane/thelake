@@ -1,7 +1,7 @@
 {
   "day": "2026-08-29",
   "morning_done": true,
-  "afternoon_done": false,
+  "afternoon_done": true,
   "wind_alerts": [
     {
       "hour": 11,
@@ -15,14 +15,14 @@
       "predicted_wind_mph": 18,
       "predicted_gust_mph": 24,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 14,
       "predicted_wind_mph": 16,
       "predicted_gust_mph": 24,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     }
   ],
   "random_hour": 22,
