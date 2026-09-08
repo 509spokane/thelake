@@ -387,7 +387,6 @@
     /* Font size scaling — only text scales, layout stays the same */
     :root                { --fs: 1.45; }
     body[data-font="lg"] { --fs: 1.83; }
-    body[data-font="xl"] { --fs: 2.38; }
 
     .font-size-picker {
       margin-top: 20px;
@@ -665,7 +664,6 @@
       <select class="font-size-select" id="fontSizeSelect" onchange="setFontSize(this.value)">
         <option value="normal">Normal Text Size</option>
         <option value="lg">I forgot my readers</option>
-        <option value="xl">I have my readers and still can't read anything</option>
       </select>
     </div>
   </div>
@@ -697,7 +695,7 @@
   // ── Font size setting ─────────────────────────────────────
   // Keep these in step with the --fs custom properties in the stylesheet —
   // SVG font-size attributes can't read a CSS variable, so charts scale here.
-  const SVG_SCALES = { xl: 2.49, lg: 1.88, normal: 1.45 };
+  const SVG_SCALES = { lg: 1.88, normal: 1.45 };
   let _svgScale = SVG_SCALES.normal;
   function setFontSize(scale) {
     document.body.dataset.font = scale === 'normal' ? '' : scale;
@@ -708,7 +706,8 @@
     renderSummary();
   }
   (function initFontSize() {
-    const saved = localStorage.getItem('fontScale') || 'normal';
+    let saved = localStorage.getItem('fontScale') || 'normal';
+    if (saved === 'xl') saved = 'lg';   // retired option — fall back to large
     _svgScale = SVG_SCALES[saved] ?? SVG_SCALES.normal;
     document.body.dataset.font = saved === 'normal' ? '' : saved;
     localStorage.setItem('fontScale', saved);
