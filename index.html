@@ -50,7 +50,7 @@
     header { text-align: center; margin-bottom: 32px; }
 
     .lake-name {
-      font-size: calc(12px * var(--fs));
+      font-size: calc(13px * var(--fs));
       letter-spacing: 0.25em;
       text-transform: uppercase;
       color: #7ec8e3;
@@ -58,7 +58,7 @@
     }
 
     h1 {
-      font-size: clamp(32px, 7vw, 56px);
+      font-size: clamp(38px, 8vw, 64px);
       font-weight: 300;
       letter-spacing: -0.02em;
       color: #fff;
@@ -166,7 +166,7 @@
     }
 
     .section-label {
-      font-size: calc(10px * var(--fs));
+      font-size: calc(12px * var(--fs));
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: #5a9ec0;
@@ -358,10 +358,10 @@
     @media (max-width: 500px) {
       .container { padding: 4px 12px 60px; }
       header { margin-bottom: 20px; }
-      .lake-name { font-size: 10px; letter-spacing: 0.18em; }
-      .subtitle { font-size: 12px; }
+      .lake-name { font-size: 12px; letter-spacing: 0.18em; }
+      .subtitle { font-size: 14px; }
       .elev-compact { padding: 10px 14px; gap: 10px; }
-      .elev-compact-value { font-size: 26px; }
+      .elev-compact-value { font-size: 30px; }
       .card { padding: 18px 12px; border-radius: 16px; margin-bottom: 14px; }
       .section-label { margin-bottom: 12px; }
     }
@@ -385,9 +385,9 @@
     a.source-link { color: #4db8e8; text-decoration: none; opacity: 0.7; }
 
     /* Font size scaling — only text scales, layout stays the same */
-    :root                { --fs: 1.25; }
-    body[data-font="lg"] { --fs: 1.58; }
-    body[data-font="xl"] { --fs: 2.05; }
+    :root                { --fs: 1.45; }
+    body[data-font="lg"] { --fs: 1.83; }
+    body[data-font="xl"] { --fs: 2.38; }
 
     .font-size-picker {
       margin-top: 20px;
@@ -697,7 +697,7 @@
   // ── Font size setting ─────────────────────────────────────
   // Keep these in step with the --fs custom properties in the stylesheet —
   // SVG font-size attributes can't read a CSS variable, so charts scale here.
-  const SVG_SCALES = { xl: 2.15, lg: 1.62, normal: 1.25 };
+  const SVG_SCALES = { xl: 2.49, lg: 1.88, normal: 1.45 };
   let _svgScale = SVG_SCALES.normal;
   function setFontSize(scale) {
     document.body.dataset.font = scale === 'normal' ? '' : scale;
@@ -2283,7 +2283,7 @@
         tempLabels + `</svg>`;
 
       const tempSection = `<div style="margin-bottom:24px">
-        <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Temperature</div>
+        <div style="font-size:calc(18px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Temperature</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
           <button onclick="switchTempView('summary')" id="tempSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
           <button onclick="switchTempView('columns')" id="tempColumnsBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:transparent;color:#7ec8e3;border:1px solid rgba(77,184,232,0.2);border-radius:6px;cursor:pointer;font-weight:500">Columns</button>
@@ -2455,7 +2455,7 @@
           windyDots + wAlertOverlay + `</svg>`;
 
         const windSection = `<div style="margin-top:36px;margin-bottom:24px">
-          <div style="font-size:calc(16px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>
+          <div style="font-size:calc(18px * var(--fs));font-weight:600;color:#7ec8e3;margin-bottom:12px;text-align:center">Wind</div>
           ${alertUpcomingNoteHtml(wT1)}
           <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
             <button onclick="switchWindView('summary')" id="windSummaryBtn" style="font-size:calc(11px * var(--fs));padding:4px 10px;background:rgba(77,184,232,0.25);color:#7ec8e3;border:1px solid rgba(77,184,232,0.4);border-radius:6px;cursor:pointer;font-weight:500">Summary</button>
