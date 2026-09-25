@@ -1,7 +1,7 @@
 {
   "day": "2026-09-25",
   "morning_done": true,
-  "afternoon_done": false,
+  "afternoon_done": true,
   "wind_alerts": [
     {
       "hour": 8,
@@ -36,28 +36,28 @@
       "predicted_wind_mph": 18,
       "predicted_gust_mph": 28,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 13,
       "predicted_wind_mph": 21,
       "predicted_gust_mph": 33,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 14,
       "predicted_wind_mph": 21,
       "predicted_gust_mph": 33,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 15,
       "predicted_wind_mph": 22,
       "predicted_gust_mph": 34,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     },
     {
       "hour": 16,
