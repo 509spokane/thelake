@@ -1,16 +1,8 @@
 {
-  "day": "2026-09-29",
+  "day": "2026-09-30",
   "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [
-    {
-      "hour": 15,
-      "predicted_wind_mph": 13,
-      "predicted_gust_mph": 23,
-      "source": "openmeteo",
-      "checked": true
-    }
-  ],
-  "random_hour": 22,
+  "wind_alerts": [],
+  "random_hour": 16,
   "random_done": false
 }
