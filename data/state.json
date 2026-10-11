@@ -1,8 +1,23 @@
 {
   "day": "2026-10-11",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [],
-  "random_hour": null,
+  "wind_alerts": [
+    {
+      "hour": 9,
+      "predicted_wind_mph": 9,
+      "predicted_gust_mph": 23,
+      "source": "weatherapi",
+      "checked": false
+    },
+    {
+      "hour": 10,
+      "predicted_wind_mph": 11,
+      "predicted_gust_mph": 23,
+      "source": "weatherapi",
+      "checked": false
+    }
+  ],
+  "random_hour": 22,
   "random_done": false
 }
