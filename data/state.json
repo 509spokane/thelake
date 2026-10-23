@@ -1,8 +1,23 @@
 {
   "day": "2026-10-23",
-  "morning_done": false,
+  "morning_done": true,
   "afternoon_done": false,
-  "wind_alerts": [],
-  "random_hour": null,
+  "wind_alerts": [
+    {
+      "hour": 16,
+      "predicted_wind_mph": 16,
+      "predicted_gust_mph": 24,
+      "source": "openmeteo",
+      "checked": false
+    },
+    {
+      "hour": 17,
+      "predicted_wind_mph": 14,
+      "predicted_gust_mph": 24,
+      "source": "openmeteo",
+      "checked": false
+    }
+  ],
+  "random_hour": 9,
   "random_done": false
 }
