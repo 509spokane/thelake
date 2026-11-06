@@ -2443,6 +2443,7 @@
             windyDots += `<circle cx="${wxOf(i)}" cy="${wyOf(s.gust)}" r="2.5" fill="rgba(210,90,20,0.9)"/>`;
           }
         });
+        let prevLbl = null;   // previous run label's right edge and y
         for (const m of mergedRuns) {
           const runSlots = slots.slice(m.startIdx, m.endIdx + 1);
           const peakS = runSlots.reduce((a, b) => b.gust > a.gust ? b : a);
@@ -2454,9 +2455,22 @@
           // Single line ("3pm–8pm · 23 mph") so the label doesn't collide with
           // the red alert-gust line drawn above the forecast curve.
           const lblGap = Math.round(10 * _svgScale);
-          windyDots += `<text x="${cx}" y="${peakY - lblGap}" text-anchor="middle" font-size="${wFS(19)}" font-family="sans-serif">` +
+          const fontPx = wFS(19);
+          const mphLabel = `${Math.round(peakS.gust)} mph`;
+          // ~0.55em per char at this sans-serif size (measured)
+          const halfW = (timeLabel.length + 3 + mphLabel.length) * fontPx * 0.55 / 2;
+          let ly = peakY - lblGap;
+          // When two runs' labels would butt against each other (close
+          // horizontally, within a line of each other vertically), nudge
+          // this one a line above the previous label.
+          if (prevLbl && cx - halfW < prevLbl.right + 12 && Math.abs(ly - prevLbl.y) < fontPx * 1.2) {
+            ly = prevLbl.y - Math.round(fontPx * 1.2);
+          }
+          ly = Math.max(ly, fontPx);  // stay inside the top edge
+          prevLbl = { right: cx + halfW, y: ly };
+          windyDots += `<text x="${cx}" y="${ly}" text-anchor="middle" font-size="${fontPx}" font-family="sans-serif">` +
             `<tspan fill="rgba(255,220,170,0.8)">${timeLabel} · </tspan>` +
-            `<tspan font-weight="600" fill="rgba(255,200,140,0.95)">${Math.round(peakS.gust)} mph</tspan></text>`;
+            `<tspan font-weight="600" fill="rgba(255,200,140,0.95)">${mphLabel}</tspan></text>`;
         }
 
         windHeadline = `<div><span class="sh-head">Wind</span> Avg: ${hl(avgWind + ' mph')}.` +
