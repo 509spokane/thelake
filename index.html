@@ -2656,12 +2656,12 @@
     const row = (icon, label, val) =>
       `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(77,184,232,0.07)">
         <span style="font-size:calc(18px * var(--fs));width:26px;text-align:center">${icon}</span>
-        <span style="font-size:calc(13px * var(--fs));color:#4a8aaa;text-transform:uppercase;letter-spacing:0.1em;flex:1">${label}</span>
+        <span style="font-size:calc(13px * var(--fs));color:#4a8aaa;text-transform:uppercase;letter-spacing:0.03em;flex:1;min-width:0">${label}</span>
         <span style="font-size:calc(13px * var(--fs));color:#e8f4ff;font-weight:500">${val}</span>
       </div>`;
 
     el.innerHTML =
-      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0 24px">` +
+      `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 24px">` +
         row('🌡️', 'Temperature', `${im.temp}°F`) +
         row('💨', 'Wind', `${im.windSpeed} mph ${dirLabel}`) +
         row('🌬️', 'Gusts', `${im.windGust} mph`) +
@@ -2707,11 +2707,11 @@
       const row = (icon, label, val) =>
         `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(77,184,232,0.07)">
           <span style="font-size:calc(18px * var(--fs));width:26px;text-align:center">${icon}</span>
-          <span style="font-size:calc(13px * var(--fs));color:#4a8aaa;text-transform:uppercase;letter-spacing:0.1em;flex:1">${label}</span>
+          <span style="font-size:calc(13px * var(--fs));color:#4a8aaa;text-transform:uppercase;letter-spacing:0.03em;flex:1;min-width:0">${label}</span>
           <span style="font-size:calc(13px * var(--fs));color:#e8f4ff;font-weight:500">${val}</span>
         </div>`;
       document.getElementById('wuContent').innerHTML =
-        `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0 24px">` +
+        `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0 24px">` +
           row('🌡️', 'Temperature', `${latest.temp_f}°F`) +
           row('💨', 'Wind', `${latest.wind_mph} mph ${dirLabel}`) +
           row('🌬️', 'Gusts', `${latest.gust_mph} mph`) +
