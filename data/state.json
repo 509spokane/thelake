@@ -1,7 +1,7 @@
 {
   "day": "2026-11-08",
   "morning_done": true,
-  "afternoon_done": false,
+  "afternoon_done": true,
   "wind_alerts": [
     {
       "hour": 9,
@@ -43,7 +43,7 @@
       "predicted_wind_mph": 14,
       "predicted_gust_mph": 26,
       "source": "openmeteo",
-      "checked": false
+      "checked": true
     }
   ],
   "random_hour": 18,
