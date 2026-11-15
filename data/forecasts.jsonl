@@ -2829,3 +2829,13 @@
 {"captured_at":"2026-11-14T16:28:27.864Z","captured_date":"2026-11-14","source":"nws","target_date":"2026-11-18","days_out":4,"high_f":42,"low_f":33,"max_wind_mph":7,"max_gust_mph":12,"precip_chance":27}
 {"captured_at":"2026-11-14T16:28:27.864Z","captured_date":"2026-11-14","source":"nws","target_date":"2026-11-19","days_out":5,"high_f":42,"low_f":31,"max_wind_mph":3,"max_gust_mph":7,"precip_chance":14}
 {"captured_at":"2026-11-14T16:28:27.864Z","captured_date":"2026-11-14","source":"nws","target_date":"2026-11-20","days_out":6,"high_f":42,"low_f":31,"max_wind_mph":2,"max_gust_mph":6,"precip_chance":10}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"weatherapi","target_date":"2026-11-15","days_out":0,"high_f":50,"low_f":41,"max_wind_mph":5,"max_gust_mph":13,"precip_chance":88}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"weatherapi","target_date":"2026-11-16","days_out":1,"high_f":48,"low_f":38,"max_wind_mph":3,"max_gust_mph":9,"precip_chance":45}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"weatherapi","target_date":"2026-11-17","days_out":2,"high_f":46,"low_f":35,"max_wind_mph":2,"max_gust_mph":7,"precip_chance":17}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-15","days_out":0,"high_f":49,"low_f":37,"max_wind_mph":8,"max_gust_mph":16,"precip_chance":94}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-16","days_out":1,"high_f":47,"low_f":33,"max_wind_mph":3,"max_gust_mph":10,"precip_chance":3}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-17","days_out":2,"high_f":44,"low_f":33,"max_wind_mph":6,"max_gust_mph":6,"precip_chance":4}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-18","days_out":3,"high_f":44,"low_f":34,"max_wind_mph":7,"max_gust_mph":14,"precip_chance":36}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-19","days_out":4,"high_f":45,"low_f":32,"max_wind_mph":5,"max_gust_mph":9,"precip_chance":20}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-20","days_out":5,"high_f":44,"low_f":32,"max_wind_mph":2,"max_gust_mph":6,"precip_chance":9}
+{"captured_at":"2026-11-15T16:15:35.958Z","captured_date":"2026-11-15","source":"nws","target_date":"2026-11-21","days_out":6,"high_f":43,"low_f":32,"max_wind_mph":3,"max_gust_mph":7,"precip_chance":27}
