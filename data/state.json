@@ -1,58 +1,8 @@
 {
-  "day": "2026-11-26",
-  "morning_done": true,
-  "afternoon_done": true,
-  "wind_alerts": [
-    {
-      "hour": 10,
-      "predicted_wind_mph": 20,
-      "predicted_gust_mph": 30,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 11,
-      "predicted_wind_mph": 9,
-      "predicted_gust_mph": 23,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 12,
-      "predicted_wind_mph": 14,
-      "predicted_gust_mph": 27,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 13,
-      "predicted_wind_mph": 14,
-      "predicted_gust_mph": 29,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 14,
-      "predicted_wind_mph": 15,
-      "predicted_gust_mph": 30,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 15,
-      "predicted_wind_mph": 16,
-      "predicted_gust_mph": 32,
-      "source": "openmeteo",
-      "checked": true
-    },
-    {
-      "hour": 16,
-      "predicted_wind_mph": 12,
-      "predicted_gust_mph": 29,
-      "source": "openmeteo",
-      "checked": true
-    }
-  ],
-  "random_hour": 17,
+  "day": "2026-11-27",
+  "morning_done": false,
+  "afternoon_done": false,
+  "wind_alerts": [],
+  "random_hour": null,
   "random_done": false
 }
